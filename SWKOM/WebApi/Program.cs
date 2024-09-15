@@ -1,7 +1,6 @@
-using SWKOM.Endpoints;
-
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
@@ -11,7 +10,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Map endpoints
-app.MapTest();
+app.MapGet("/", () => "Hello world!");
 
 app.Run();
