@@ -1,5 +1,3 @@
-version: '3.4'
-
 services:
   webapi:
     image: ${DOCKER_REGISTRY-}webapi
@@ -9,20 +7,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      # - ASPNETCORE_HTTPS_PORTS=8081
     ports:
       - "8080:8080"
-      - "8081:8081"
+    #  - "8081:8081"
     volumes:
-      # plattformabhängige Volume-Mounts
-      - type: bind
-        source: ${APPDATA:-${HOME}/.microsoft/usersecrets}
-        target: /home/app/.microsoft/usersecrets:ro
-        read_only: true
-      - type: bind
-        source: ${APPDATA:-${HOME}/.aspnet/https}
-        target: /home/app/.aspnet/https:ro
-        read_only: true
+      # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro # Windows
+      # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro # Windows
+      - ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro # MAC/LINUX
+      - ${HOME}/.aspnet/dev-certs/https:/home/app/.aspnet/https:ro # MAC/LINUX
     networks:
       - dms-net
 

@@ -8,7 +8,7 @@
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
     <DockerServiceName>webapi</DockerServiceName>
-    <UserSecretsId>a8eb28be-e969-45dc-8e06-79301672784b</UserSecretsId>
+    <UserSecretsId>733308a7-1fb9-4d59-a9cd-5047320388d9</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
     <None Include="docker-compose.yml" />
