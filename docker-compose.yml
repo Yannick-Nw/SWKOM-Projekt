@@ -52,10 +52,10 @@ services:
       - "8080:8080"
     #  - "8081:8081"
     volumes:
-      # - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro # Windows
-      # - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro # Windows
-      - ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro # MAC/LINUX
-      - ${HOME}/.aspnet/dev-certs/https:/home/app/.aspnet/https:ro # MAC/LINUX
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro # Windows
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro # Windows
+      # ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro # MAC/LINUX
+      # ${HOME}/.aspnet/dev-certs/https:/home/app/.aspnet/https:ro # MAC/LINUX
     networks:
       - dms-net
 
