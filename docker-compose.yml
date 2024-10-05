@@ -1,3 +1,5 @@
+version: '3.4'
+
 services:
   webapi:
     image: ${DOCKER_REGISTRY-}webapi
@@ -12,5 +14,26 @@ services:
       - "8080:8080"
       - "8081:8081"
     volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      # plattformabhängige Volume-Mounts
+      - type: bind
+        source: ${APPDATA:-${HOME}/.microsoft/usersecrets}
+        target: /home/app/.microsoft/usersecrets:ro
+        read_only: true
+      - type: bind
+        source: ${APPDATA:-${HOME}/.aspnet/https}
+        target: /home/app/.aspnet/https:ro
+        read_only: true
+    networks:
+      - dms-net
+
+  web-ui:
+    build:
+      context: ./web-ui
+    ports:
+      - "80:80"
+    networks:
+      - dms-net
+
+networks:
+  dms-net:
+    driver: bridge

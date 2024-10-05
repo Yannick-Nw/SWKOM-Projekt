@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Management System</title>
+</head>
+<body>
+    <h1>Hello World from the Web UI</h1>
+    <p id="message">Loading message from REST API...</p>
+
+    <script>
+        // Hole eine einfache Nachricht vom REST API Server
+        fetch('http://localhost:8081')
+            .then(response => response.text())
+            .then(data => document.getElementById('message').textContent = data)
+            .catch(error => console.error('Error fetching message:', error));
+    </script>
+</body>
+</html>
