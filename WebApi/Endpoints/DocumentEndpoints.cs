@@ -10,6 +10,8 @@ public static class DocumentEndpoints
     {
         var group = builder.MapGroup("document");
 
+        group.MapGet("", GetDocumentAsync); //test
+
         group.MapGet("search", SearchDocumentAsync);
 
         group.MapPost("", UploadDocumentAsync);
@@ -20,6 +22,15 @@ public static class DocumentEndpoints
 
         return builder;
     }
+
+    private static Task<IResult> GetDocumentAsync(ILogger logger)
+    {
+        logger.LogInformation("Fetching document...");
+
+        // Rückgabe eines 200 OK mit einer optionalen Nachricht oder leeren Inhalt
+        return Task.FromResult(Results.Ok("Hello from the Document API!"));
+    }
+
 
     private static Task SearchDocumentAsync(ILogger logger)
     {

@@ -6,14 +6,12 @@ builder.Services.AddLogging();
 // CORS konfigurieren, um Anfragen von localhost:80 (WebUI) zuzulassen
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowWebUI",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost") // Die URL deiner Web-UI
-                .AllowAnyHeader()
-                .AllowAnyOrigin()
-                .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowLocalhost",
+        builder => builder
+            .WithOrigins("http://localhost") // URL deiner Web-UI
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -29,10 +27,17 @@ if (app.Environment.IsDevelopment())
 }
 
 // Verwende die CORS-Policy
-app.UseCors("AllowWebUI");
+app.UseCors("AllowLocalhost");
 
 // Map endpoints
 app.MapDocumentEndpoints();
+
+// Aktiviere die Verwendung von statischen Dateien
+app.UseStaticFiles();
+
+// Aktiviere den Routing-Support
+app.UseRouting();
+
 
 //app.MapGet("/", () => Results.Redirect("/index.html")); // Weiterleitung auf die Hauptseite
 
