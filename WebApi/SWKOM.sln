@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35219.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi.csproj", "{52647491-72A0-4AF8-9BBE-8968B78902E8}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "..\docker-compose.dcproj", "{B4146BCF-6915-4196-A690-96E43DE550D1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{28B0B82B-AC69-440D-AC13-B9B62D3C4860}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "WebApp", "..\WebApp\", "{8F5B7D43-3738-42E1-9AA5-3981E76447A1}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_50702"
+		Debug.AspNetCompiler.PhysicalPath = "..\WebApp\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50702\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_50702"
+		Release.AspNetCompiler.PhysicalPath = "..\WebApp\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_50702\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "50702"
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Domain\Domain.csproj", "{7D357072-8BF6-4643-9200-BC42DBA7BEC9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{96F10009-00DF-4BBB-AE9B-9A8E677C77AF}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52647491-72A0-4AF8-9BBE-8968B78902E8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52647491-72A0-4AF8-9BBE-8968B78902E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52647491-72A0-4AF8-9BBE-8968B78902E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52647491-72A0-4AF8-9BBE-8968B78902E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4146BCF-6915-4196-A690-96E43DE550D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4146BCF-6915-4196-A690-96E43DE550D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4146BCF-6915-4196-A690-96E43DE550D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4146BCF-6915-4196-A690-96E43DE550D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28B0B82B-AC69-440D-AC13-B9B62D3C4860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28B0B82B-AC69-440D-AC13-B9B62D3C4860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28B0B82B-AC69-440D-AC13-B9B62D3C4860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28B0B82B-AC69-440D-AC13-B9B62D3C4860}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8F5B7D43-3738-42E1-9AA5-3981E76447A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F5B7D43-3738-42E1-9AA5-3981E76447A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8F5B7D43-3738-42E1-9AA5-3981E76447A1}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8F5B7D43-3738-42E1-9AA5-3981E76447A1}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{7D357072-8BF6-4643-9200-BC42DBA7BEC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7D357072-8BF6-4643-9200-BC42DBA7BEC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7D357072-8BF6-4643-9200-BC42DBA7BEC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7D357072-8BF6-4643-9200-BC42DBA7BEC9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E4C5CC9-7A3A-4FFA-943D-48680F205CA8}
+	EndGlobalSection
+EndGlobal

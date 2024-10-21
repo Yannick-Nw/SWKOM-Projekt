@@ -1,5 +1,4 @@
-﻿
-<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
+﻿<Project ToolsVersion="15.0" Sdk="Microsoft.Docker.Sdk">
   <PropertyGroup Label="Globals">
     <ProjectVersion>2.1</ProjectVersion>
     <DockerTargetOS>Linux</DockerTargetOS>
@@ -11,6 +10,7 @@
     <UserSecretsId>733308a7-1fb9-4d59-a9cd-5047320388d9</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="docker-compose.env" />
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>

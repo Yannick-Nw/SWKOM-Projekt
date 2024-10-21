@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Infrastructure.Repositories.EntityFrameworkCore;
+using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace WebApi.Endpoints;
@@ -10,7 +14,7 @@ public static class DocumentEndpoints
     {
         var group = builder.MapGroup("document");
 
-        group.MapGet("", GetDocumentAsync); //test
+        group.MapGet("", GetDocumentAsync);
 
         group.MapGet("search", SearchDocumentAsync);
 
@@ -23,12 +27,13 @@ public static class DocumentEndpoints
         return builder;
     }
 
-    private static Task<IResult> GetDocumentAsync(ILogger logger)
+    private static async Task<Ok<List<TestDbo>>> GetDocumentAsync(PaperlessDbContext dbContext, ILogger logger)
     {
         logger.LogInformation("Fetching document...");
 
-        // Rückgabe eines 200 OK mit einer optionalen Nachricht oder leeren Inhalt
-        return Task.FromResult(Results.Ok("Hello from the Document API!"));
+        var documents = await dbContext.Tests.ToListAsync();
+
+        return TypedResults.Ok(documents);
     }
 
 

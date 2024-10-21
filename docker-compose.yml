@@ -1,84 +1,58 @@
 services:
-  broker:
-    image: docker.io/library/redis:7
-    restart: unless-stopped
-    volumes:
-      - redisdata:/data
+  # Optional
+  postgres-adminer:
+    image: adminer
+    ports:
+      - 8082:8080
     networks:
-      - dms-net
+      - backend
+    restart: always
 
-  db:
-    image: docker.io/library/postgres:16
-    restart: unless-stopped
+  postgres:
+    image: postgres:13
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
       POSTGRES_PASSWORD: paperless
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - dms-net
-
-  webserver:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    restart: unless-stopped
-    depends_on:
-      - db
-      - broker
     ports:
-      - "8000:8000"
+      - "5432:5432"
     volumes:
-      - data:/usr/src/paperless/data
-      - media:/usr/src/paperless/media
-      - ./export:/usr/src/paperless/export
-      - ./consume:/usr/src/paperless/consume
-    env_file: docker-compose.env
-    environment:
-      PAPERLESS_REDIS: redis://broker:6379
-      PAPERLESS_DBHOST: db
+      - postgres_data:/var/lib/postgresql/data
     networks:
-      - dms-net
+      - backend
+    restart: always
 
   webapi:
-    image: ${DOCKER_REGISTRY-}webapi
-    build:
-      context: .
-      dockerfile: WebApi/Dockerfile
+    build: ./WebApi
+    depends_on:
+     - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      # - ASPNETCORE_HTTP_PORTS=8080
-      # - ASPNETCORE_HTTPS_PORTS=8081
-      - ASPNETCORE_URLS=http://+:8080 # Stellt sicher, dass nur HTTP verwendet wird
     ports:
       - "8080:8080"
-    #  - "8081:8081"
-    volumes:
-      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro # Windows
-      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro # Windows
-      #- ${HOME}/.microsoft/usersecrets:/home/app/.microsoft/usersecrets:ro # MAC/LINUX
-      #- ${HOME}/.aspnet/dev-certs/https:/home/app/.aspnet/https:ro # MAC/LINUX
     networks:
-      - dms-net
+      - frontend
+      - backend
+    restart: always
 
-  web-ui:
-    build:
-      context: ./web-ui
+  webapp:
+    build: ./WebApp
+    depends_on:
+      - webapi
     ports:
       - "80:80"
     volumes:
-      - ./web-ui/nginx.conf:/etc/nginx/nginx.conf  # Binde die Nginx-Konfigurationsdatei ein
-      - ./web-ui/html:/app/wwwroot  # Statische Dateien mounten
-    depends_on:
-      - webapi
+      - ./WebApp/nginx.conf:/etc/nginx/nginx.conf  # Binde die Nginx-Konfigurationsdatei ein
+      - ./WebApp/html:/app/wwwroot  # Statische Dateien mounten
     networks:
-      - dms-net
+      - frontend
+    restart: always
 
 networks:
-  dms-net:
-    driver: bridge
+    frontend:
+        driver: bridge
+    backend:
+        driver: bridge
 
 volumes:
-  data:
-  media:
-  pgdata:
-  redisdata:
+    postgres_data:   
