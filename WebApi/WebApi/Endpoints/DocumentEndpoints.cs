@@ -1,9 +1,14 @@
-﻿using Infrastructure.Repositories.EntityFrameworkCore;
+﻿using Domain.Entities;
+using System.Linq;
+using Domain.Repositories;
+using Infrastructure.Repositories.EntityFrameworkCore;
 using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using WebApi.Models;
+using System.Globalization;
 
 namespace WebApi.Endpoints;
 
@@ -12,66 +17,77 @@ public static class DocumentEndpoints
 {
     public static IEndpointRouteBuilder MapDocumentEndpoints(this IEndpointRouteBuilder builder)
     {
-        var group = builder.MapGroup("document");
+        var group = builder.MapGroup("api/document");
 
-        group.MapGet("", GetDocumentAsync);
+        group.MapGet("", GetDocumentsAsync);
+        group
+            .MapGet("{id:guid}", GetDocumentAsync)
+            .WithName("GetDocumentById");
 
-        group.MapGet("search", SearchDocumentAsync);
+        //group.MapGet("search", SearchDocumentAsync);
 
-        group.MapPost("", UploadDocumentAsync);
-        group.MapDelete("", DeleteDocumentAsync);
-
-        group.MapGet("metadata", GetDocumentMetadataAsync);
-        group.MapDelete("metadata", DeleteDocumentMetadataAsync);
+        group
+            .MapPost("", UploadDocumentAsync)
+            .DisableAntiforgery();
+        group.MapDelete("{id:guid}", DeleteDocumentAsync);
 
         return builder;
     }
 
-    private static async Task<Ok<List<TestDbo>>> GetDocumentAsync(PaperlessDbContext dbContext, ILogger logger)
+    public static async Task<Ok<IReadOnlyList<PaperlessDocument>>> GetDocumentsAsync(IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching document...");
+        logger.LogInformation("Fetching documents...");
 
-        var documents = await dbContext.Tests.ToListAsync();
+        var documents = await documentRepository.GetAsync(ct);
 
         return TypedResults.Ok(documents);
     }
-
-
-    private static Task SearchDocumentAsync(ILogger logger)
+    public static async Task<Results<Ok<PaperlessDocument>, NotFound<Guid>>> GetDocumentAsync([FromRoute] Guid id, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
-        logger.LogInformation("Searching document...");
+        logger.LogInformation("Fetching document: {documentId}", id);
 
-        return Task.CompletedTask;
+        var document = await documentRepository.GetAsync(new DocumentId(id), ct);
+        if (document is null)
+            return TypedResults.NotFound<Guid>(id);
+
+        return TypedResults.Ok(document);
     }
+
+
+    //public static Task SearchDocumentAsync(ILogger logger)
+    //{
+    //    logger.LogInformation("Searching document...");
+
+    //    return Task.CompletedTask;
+    //}
 
     #region Document
-    private static Task UploadDocumentAsync(IFormFile file, ILogger logger)
+    public static async Task<CreatedAtRoute> UploadDocumentAsync([FromForm] UploadDocumentModel model, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
-        logger.LogInformation("Uploading document...");
+        logger.LogInformation("Uploading document: {model}", model);
 
-        return Task.CompletedTask;
+        var id = DocumentId.New();
+
+        // Upload to S3
+        var s3Path = Guid.NewGuid().ToString(); // Mocked
+
+        var fileName = model.FileName ?? model.File.FileName;
+        var title = model.Title ?? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
+        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now, new DocumentMetadata(fileName, title, model.Author));
+
+        await documentRepository.CreateAsync(document, ct);
+
+        return TypedResults.CreatedAtRoute("GetDocumentById", new { id = id.Value });
     }
-    private static Task DeleteDocumentAsync(ILogger logger)
+    public static async Task<Results<Ok, NotFound<Guid>>> DeleteDocumentAsync([FromRoute] Guid id, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
-        logger.LogInformation("Deleting document...");
+        logger.LogInformation("Deleting document: {documentId}", id);
 
-        return Task.CompletedTask;
-    }
-    #endregion
+        var success = await documentRepository.DeleteAsync(new DocumentId(id), ct);
+        if (!success)
+            return TypedResults.NotFound<Guid>(id);
 
-    #region Metadata
-    private static Task GetDocumentMetadataAsync(ILogger logger)
-    {
-        logger.LogInformation("Get document metadata...");
-
-        return Task.CompletedTask;
-    }
-
-    private static Task DeleteDocumentMetadataAsync(ILogger logger)
-    {
-        logger.LogInformation("Delete document metadata...");
-
-        return Task.CompletedTask;
+        return TypedResults.Ok();
     }
     #endregion
 }

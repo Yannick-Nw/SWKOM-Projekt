@@ -6,6 +6,6 @@ public class PaperlessProfile : Profile
 {
     public PaperlessProfile()
     {
-        // Mappings here
+
     }
 }

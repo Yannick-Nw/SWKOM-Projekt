@@ -1,4 +1,7 @@
-﻿using Infrastructure.Repositories.EntityFrameworkCore;
+﻿using Domain.Repositories;
+using Infrastructure;
+using Infrastructure.Repositories.EntityFrameworkCore;
+using Infrastructure.Repositories.EntityFrameworkCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Mappings;
 
@@ -11,14 +14,19 @@ public static class ServiceExtensions
         services
             .RegisterMappings()
             .RegisterLogging()
-            .RegisterDatabase(configuration.GetConnectionString("DefaultConnection")!);
+            .RegisterDatabase(configuration.GetConnectionString("DefaultConnection")!)
+            .AddScoped<IDocumentRepository, DocumentRepository>();
 
         return services;
     }
 
     private static IServiceCollection RegisterMappings(this IServiceCollection services)
     {
-        services.AddAutoMapper(c => c.AddProfile<PaperlessProfile>());
+        services.AddAutoMapper(c =>
+        {
+            c.AddProfile<PaperlessProfile>();
+            c.AddProfile<InfrastructureProfile>();
+        });
 
         return services;
     }
@@ -33,7 +41,6 @@ public static class ServiceExtensions
 
     private static IServiceCollection RegisterDatabase(this IServiceCollection services, string connectionString)
     {
-
         services.AddDbContext<PaperlessDbContext>(options => options.UseNpgsql(connectionString));
 
         return services;

@@ -1,22 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Management System</title>
+    <title>Document Upload Frontend</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
 </head>
-<body>
-    <h1>Hello World from the Web UI</h1>
-    <p><a href="http://localhost:8000">Go to Paperless (Port 8000)</a></p>
-    <p id="message">Loading message from REST API...</p>
 
+<body>
+    <section class="section">
+        <div class="container">
+            <h1 class="title">Upload Documents</h1>
+
+            <div class="box">
+                <h2 class="subtitle">Upload a New Document</h2>
+                <div class="field">
+                    <label class="label">File</label>
+                    <div class="control">
+                        <input class="input" type="file" id="documentFile">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">File Name</label>
+                    <div class="control">
+                        <input class="input" type="text" id="documentFileName" placeholder="Optional File Name">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Title</label>
+                    <div class="control">
+                        <input class="input" type="text" id="documentTitle" placeholder="Document Title">
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Author</label>
+                    <div class="control">
+                        <input class="input" type="text" id="documentAuthor" placeholder="Author Name">
+                    </div>
+                </div>
+                <button class="button is-primary" onclick="uploadDocument()">Upload Document</button>
+            </div>
+
+            <div class="box">
+                <h2 class="subtitle">Documents List</h2>
+                <div id="documentsList"></div>
+            </div>
+        </div>
+    </section>
 
     <script>
-        // Hole eine einfache Nachricht vom REST API Server
-        fetch('http://localhost:8080/document/')
-            .then(response => response.text())
-            .then(data => document.getElementById('message').textContent = data)
-            .catch(error => console.error('Error fetching message:', error));
+        // Replace with your API URL
+        const apiUrl = 'http://localhost:8080/api/document';
+
+        // Function to fetch and display documents
+        async function fetchDocuments() {
+            try {
+                const response = await fetch(apiUrl);
+                const documents = await response.json();
+                const documentsList = document.getElementById('documentsList');
+                documentsList.innerHTML = '';
+                documents.forEach(doc => {
+                    documentsList.innerHTML += `
+                        <div class="box">
+                            <h3 class="title is-4">${doc.metadata.title || 'Untitled Document'}</h3>
+                            <p><strong>Author:</strong> ${doc.metadata.author || 'Unknown'}</p>
+                            <p><strong>File Name:</strong> ${doc.metadata.fileName || 'No File Name Provided'}</p>
+                            <button class="button is-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
+                        </div>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error fetching documents:', error);
+            }
+        }
+
+        // Function to upload a new document
+        async function uploadDocument() {
+            const fileInput = document.getElementById('documentFile');
+            const fileName = document.getElementById('documentFileName').value;
+            const title = document.getElementById('documentTitle').value;
+            const author = document.getElementById('documentAuthor').value;
+
+            if (fileInput.files.length === 0) {
+                alert('Please select a file to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('File', fileInput.files[0]);
+            if (fileName) formData.append('FileName', fileName);
+            if (title) formData.append('Title', title);
+            if (author) formData.append('Author', author);
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    fetchDocuments();
+                    fileInput.value = '';
+                    document.getElementById('documentFileName').value = '';
+                    document.getElementById('documentTitle').value = '';
+                    document.getElementById('documentAuthor').value = '';
+                } else {
+                    console.error('Error uploading document');
+                }
+            } catch (error) {
+                console.error('Error uploading document:', error);
+            }
+        }
+
+        // Function to delete a document
+        async function deleteDocument(id) {
+            try {
+                const response = await fetch(`${apiUrl}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    fetchDocuments();
+                } else {
+                    console.error('Error deleting document');
+                }
+            } catch (error) {
+                console.error('Error deleting document:', error);
+            }
+        }
+
+        // Initial fetch of documents
+        fetchDocuments();
     </script>
 </body>
+
 </html>

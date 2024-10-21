@@ -1,17 +1,18 @@
-﻿using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
+﻿using Domain.Entities;
+using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Repositories.EntityFrameworkCore;
 
 public class PaperlessDbContext(DbContextOptions<PaperlessDbContext> options) : DbContext(options)
 {
-    public DbSet<TestDbo> Tests { get; set; } = null!;
+    public DbSet<PaperlessDocumentDbo> Documents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder
-            .Entity<TestDbo>()
-            .HasData(new TestDbo { Id = 1, Name = "Test" }, new TestDbo { Id = 2, Name = "Test 2" });
+        builder.Entity<PaperlessDocumentDbo>()
+            .ToTable("Document");
 
         base.OnModelCreating(builder);
     }
