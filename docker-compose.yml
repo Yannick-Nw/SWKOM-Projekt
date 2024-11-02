@@ -1,4 +1,13 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"       # RabbitMQ port
+      - "9093:15672"     # Management interface
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+  
   # Optional
   postgres-adminer:
     image: adminer

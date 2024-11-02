@@ -1,6 +1,7 @@
 ﻿using Domain.Entities;
 using System.Linq;
 using Domain.Repositories;
+using Infrastructure.Repositories;
 using Infrastructure.Repositories.EntityFrameworkCore;
 using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,7 +12,6 @@ using WebApi.Models;
 using System.Globalization;
 
 namespace WebApi.Endpoints;
-
 
 public static class DocumentEndpoints
 {
@@ -34,7 +34,8 @@ public static class DocumentEndpoints
         return builder;
     }
 
-    public static async Task<Ok<IReadOnlyList<PaperlessDocument>>> GetDocumentsAsync(IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+    public static async Task<Ok<IReadOnlyList<PaperlessDocument>>> GetDocumentsAsync(
+        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching documents...");
 
@@ -42,7 +43,9 @@ public static class DocumentEndpoints
 
         return TypedResults.Ok(documents);
     }
-    public static async Task<Results<Ok<PaperlessDocument>, NotFound<Guid>>> GetDocumentAsync([FromRoute] Guid id, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+
+    public static async Task<Results<Ok<PaperlessDocument>, NotFound<Guid>>> GetDocumentAsync([FromRoute] Guid id,
+        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
         logger.LogInformation("Fetching document: {documentId}", id);
 
@@ -62,7 +65,10 @@ public static class DocumentEndpoints
     //}
 
     #region Document
-    public static async Task<CreatedAtRoute> UploadDocumentAsync([FromForm] UploadDocumentModel model, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+
+    public static async Task<CreatedAtRoute> UploadDocumentAsync([FromForm] UploadDocumentModel model,
+        IDocumentRepository documentRepository, MessageQueueService messageQueueService, ILogger logger,
+        CancellationToken ct = default)
     {
         logger.LogInformation("Uploading document: {model}", model);
 
@@ -72,14 +78,25 @@ public static class DocumentEndpoints
         var s3Path = Guid.NewGuid().ToString(); // Mocked
 
         var fileName = model.FileName ?? model.File.FileName;
-        var title = model.Title ?? CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
-        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now, new DocumentMetadata(fileName, title, model.Author));
+        var title = model.Title ??
+                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
+        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now,
+            new DocumentMetadata(fileName, title, model.Author));
 
+        // Save document to repository
         await documentRepository.CreateAsync(document, ct);
+
+        // Publish message to RabbitMQ
+        var message = $"Document {id.Value} uploaded with title '{title}'";
+        messageQueueService.PublishMessage(message); // Publishes the document info for OCR processing
+
+        logger.LogInformation("Document {documentId} uploaded and message sent to queue.", id);
 
         return TypedResults.CreatedAtRoute("GetDocumentById", new { id = id.Value });
     }
-    public static async Task<Results<Ok, NotFound<Guid>>> DeleteDocumentAsync([FromRoute] Guid id, IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+
+    public static async Task<Results<Ok, NotFound<Guid>>> DeleteDocumentAsync([FromRoute] Guid id,
+        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
     {
         logger.LogInformation("Deleting document: {documentId}", id);
 
@@ -89,5 +106,6 @@ public static class DocumentEndpoints
 
         return TypedResults.Ok();
     }
+
     #endregion
 }
