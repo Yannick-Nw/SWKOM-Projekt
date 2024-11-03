@@ -14,6 +14,8 @@ using Microsoft.OpenApi.Models;
 using Domain.Validation;
 using WebApi.Services.Messaging;
 using WebApi.Services.Messaging.Messages;
+using Microsoft.AspNetCore.Http;
+using FluentValidation;
 
 namespace WebApi.Endpoints;
 
@@ -158,24 +160,21 @@ public static class DocumentEndpoints
 
         logger.LogInformation("Uploading document: {model}", model);
 
-        var id = DocumentId.New();
-
         // Upload to S3
         var s3Path = Guid.NewGuid().ToString(); // Mocked
 
         var fileName = model.FileName ?? model.File.FileName ?? string.Empty;
         var title = model.Title ??
                     CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
-        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now, new DocumentMetadata(fileName, title, model.Author));
 
-        // Validate
-        var validator = new PaperlessDocumentValidator();
-        var results = validator.Validate(document);
-
-        if (!results.IsValid)
+        // Create document domain entity
+        PaperlessDocument document;
+        try
         {
-            // add errors to modelstate leverage system.componentmodel
-            logger.LogWarning("Document {documentId} failed validation: {errors}", id, results.Errors);
+            document = PaperlessDocument.New(s3Path, model.File.Length, DateTimeOffset.Now, new DocumentMetadata(fileName, title, model.Author));
+        } catch (ValidationException ex)
+        {
+            logger.LogWarning("Upload failed validation: {errors}", string.Join(", ", ex.Errors));
 
             return TypedResults.UnprocessableEntity();
         }
@@ -184,12 +183,12 @@ public static class DocumentEndpoints
         await documentRepository.CreateAsync(document, ct);
 
         // Publish message to RabbitMQ
-        var message = new DocumentUploadedMessage(id, s3Path);
+        var message = new DocumentUploadedMessage(document.Id, document.Path);
         messageQueueService.Publish(message); // Publishes the document info for OCR processing
 
-        logger.LogInformation("Document {documentId} uploaded and message sent to queue.", id);
+        logger.LogInformation("Document {documentId} uploaded and message sent to queue.", document.Id);
 
-        return TypedResults.CreatedAtRoute("GetDocumentById", new { id = id.Value });
+        return TypedResults.CreatedAtRoute("GetDocumentById", new { id = document.Id.Value });
     }
 
     public static async Task<Results<Ok, NotFound<Guid>>> DeleteDocumentAsync([FromRoute] Guid id,

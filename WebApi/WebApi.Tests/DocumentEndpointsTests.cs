@@ -19,13 +19,14 @@ public class DocumentEndpointsTests
 {
     private readonly Mock<IDocumentRepository> _mockRepository;
     private readonly Mock<IMessageQueueService> _mockMessageQueue;
-    private readonly Mock<ILogger> _mockLogger;
+    private readonly Mock<ILoggerFactory> _mockLogger;
 
     public DocumentEndpointsTests()
     {
         _mockRepository = new Mock<IDocumentRepository>();
         _mockMessageQueue = new Mock<IMessageQueueService>();
-        _mockLogger = new Mock<ILogger>();
+        _mockLogger = new Mock<ILoggerFactory>();
+        _mockLogger.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
     }
 
     [Fact]

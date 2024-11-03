@@ -30,7 +30,7 @@ public static class AppExtensions
 
     private static IApplicationBuilder AddExceptionHandlingMiddleware(this WebApplication app)
     {
-        // log exceptions with ILogger
+        // Log exceptions with ILogger
         app.UseExceptionHandler(o =>
         {
             o.Run(async context =>
