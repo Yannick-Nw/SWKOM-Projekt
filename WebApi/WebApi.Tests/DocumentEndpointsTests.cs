@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using WebApi.Endpoints;
 using WebApi.Models;
+using WebApi.Services.Messaging;
 using Xunit;
 
 namespace WebApi.Tests;
@@ -17,11 +18,13 @@ namespace WebApi.Tests;
 public class DocumentEndpointsTests
 {
     private readonly Mock<IDocumentRepository> _mockRepository;
+    private readonly Mock<IMessageQueueService> _mockMessageQueue;
     private readonly Mock<ILogger> _mockLogger;
 
     public DocumentEndpointsTests()
     {
         _mockRepository = new Mock<IDocumentRepository>();
+        _mockMessageQueue = new Mock<IMessageQueueService>();
         _mockLogger = new Mock<ILogger>();
     }
 
@@ -108,7 +111,11 @@ public class DocumentEndpointsTests
     public async Task UploadDocumentAsync_ShouldReturnCreatedAtRoute()
     {
         // Arrange
-        var model = new UploadDocumentModel(new Mock<IFormFile>().Object)
+        var file = new Mock<IFormFile>();
+        file.Setup(f => f.FileName).Returns("file.pdf");
+        file.Setup(f => f.Length).Returns(1024);
+
+        var model = new UploadDocumentModel(file.Object)
         {
             FileName = "file.pdf",
             Title = "Title",
@@ -117,10 +124,24 @@ public class DocumentEndpointsTests
         _mockRepository.Setup(r => r.CreateAsync(It.IsAny<PaperlessDocument>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         // Act
-        var result = await DocumentEndpoints.UploadDocumentAsync(model, _mockRepository.Object, _mockLogger.Object);
+        var result = await DocumentEndpoints.UploadDocumentAsync(model, _mockRepository.Object, _mockMessageQueue.Object, _mockLogger.Object);
 
         // Assert
-        Assert.IsType<CreatedAtRoute>(result);
-        Assert.Equal("GetDocumentById", ((CreatedAtRoute)result).RouteName);
+        Assert.IsType<CreatedAtRoute>(result.Result);
+        Assert.Equal("GetDocumentById", ((CreatedAtRoute)result.Result).RouteName);
+    }
+
+    [Fact]
+    public async Task UploadDocumentAsync_ShouldReturnUnprocessableEntity_WhenModelIsInvalid()
+    {
+        // Arrange
+        var model = new UploadDocumentModel(new Mock<IFormFile>().Object);
+        _mockRepository.Setup(r => r.CreateAsync(It.IsAny<PaperlessDocument>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await DocumentEndpoints.UploadDocumentAsync(model, _mockRepository.Object, _mockMessageQueue.Object, _mockLogger.Object);
+
+        // Assert
+        Assert.IsType<UnprocessableEntity>(result.Result);
     }
 }

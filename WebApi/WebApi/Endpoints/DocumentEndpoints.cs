@@ -10,34 +10,126 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WebApi.Models;
 using System.Globalization;
+using Microsoft.OpenApi.Models;
+using Domain.Validation;
+using WebApi.Services.Messaging;
+using WebApi.Services.Messaging.Messages;
 
 namespace WebApi.Endpoints;
 
 public static class DocumentEndpoints
 {
+    /// <summary>
+    /// Maps the document endpoints to the specified <see cref="IEndpointRouteBuilder"/>.
+    /// </summary>
+    /// <param name="builder">The <see cref="IEndpointRouteBuilder"/> to map the endpoints to.</param>
+    /// <returns>The <see cref="IEndpointRouteBuilder"/> with the mapped endpoints.</returns>
     public static IEndpointRouteBuilder MapDocumentEndpoints(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("api/document");
 
-        group.MapGet("", GetDocumentsAsync);
+        group.MapGet("", GetDocumentsAsync)
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Retrieves all documents.",
+                Description = "Retrieves all documents from the database."
+            });
+
         group
             .MapGet("{id:guid}", GetDocumentAsync)
-            .WithName("GetDocumentById");
-
-        //group.MapGet("search", SearchDocumentAsync);
+            .WithName("GetDocumentById")
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Retrieves a document by its ID.",
+                Description = "Retrieves a document from the database by its ID.",
+                Parameters = new List<OpenApiParameter>
+                {
+                    new()
+                    {
+                        Name = "id",
+                        In = ParameterLocation.Path,
+                        Required = true,
+                        Schema = new OpenApiSchema
+                        {
+                            Type = "string",
+                            Format = "uuid"
+                        }
+                    }
+                }
+            });
 
         group
             .MapPost("", UploadDocumentAsync)
-            .DisableAntiforgery();
-        group.MapDelete("{id:guid}", DeleteDocumentAsync);
+            .DisableAntiforgery()
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Uploads a document.",
+                Description = "Uploads a document to the database.",
+                RequestBody = new OpenApiRequestBody
+                {
+                    Content = new Dictionary<string, OpenApiMediaType>
+                    {
+                        ["multipart/form-data"] = new OpenApiMediaType
+                        {
+                            Schema = new OpenApiSchema
+                            {
+                                Type = "object",
+                                Properties = new Dictionary<string, OpenApiSchema>
+                                {
+                                    ["file"] = new OpenApiSchema
+                                    {
+                                        Type = "string",
+                                        Format = "binary"
+                                    },
+                                    ["fileName"] = new OpenApiSchema
+                                    {
+                                        Type = "string"
+                                    },
+                                    ["title"] = new OpenApiSchema
+                                    {
+                                        Type = "string"
+                                    },
+                                    ["author"] = new OpenApiSchema
+                                    {
+                                        Type = "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        group.MapDelete("{id:guid}", DeleteDocumentAsync)
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Deletes a document by its ID.",
+                Description = "Deletes a document from the database by its ID.",
+                Parameters = new List<OpenApiParameter>
+                {
+                    new()
+                    {
+                        Name = "id",
+                        In = ParameterLocation.Path,
+                        Required = true,
+                        Schema = new OpenApiSchema
+                        {
+                            Type = "string",
+                            Format = "uuid"
+                        }
+                    }
+                }
+            });
 
         return builder;
     }
 
     public static async Task<Ok<IReadOnlyList<PaperlessDocument>>> GetDocumentsAsync(
-        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+        IDocumentRepository documentRepository, ILoggerFactory loggerFactory, CancellationToken ct = default)
     {
-        logger.LogInformation("Fetching documents...");
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+
+        logger.LogInformation("Fetching all documents");
 
         var documents = await documentRepository.GetAsync(ct);
 
@@ -45,8 +137,10 @@ public static class DocumentEndpoints
     }
 
     public static async Task<Results<Ok<PaperlessDocument>, NotFound<Guid>>> GetDocumentAsync([FromRoute] Guid id,
-        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+        IDocumentRepository documentRepository, ILoggerFactory loggerFactory, CancellationToken ct = default)
     {
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+
         logger.LogInformation("Fetching document: {documentId}", id);
 
         var document = await documentRepository.GetAsync(new DocumentId(id), ct);
@@ -56,20 +150,12 @@ public static class DocumentEndpoints
         return TypedResults.Ok(document);
     }
 
-
-    //public static Task SearchDocumentAsync(ILogger logger)
-    //{
-    //    logger.LogInformation("Searching document...");
-
-    //    return Task.CompletedTask;
-    //}
-
-    #region Document
-
-    public static async Task<CreatedAtRoute> UploadDocumentAsync([FromForm] UploadDocumentModel model,
-        IDocumentRepository documentRepository, MessageQueueService messageQueueService, ILogger logger,
+    public static async Task<Results<CreatedAtRoute, UnprocessableEntity>> UploadDocumentAsync([FromForm] UploadDocumentModel model,
+        IDocumentRepository documentRepository, IMessageQueueService messageQueueService, ILoggerFactory loggerFactory,
         CancellationToken ct = default)
     {
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+
         logger.LogInformation("Uploading document: {model}", model);
 
         var id = DocumentId.New();
@@ -77,18 +163,29 @@ public static class DocumentEndpoints
         // Upload to S3
         var s3Path = Guid.NewGuid().ToString(); // Mocked
 
-        var fileName = model.FileName ?? model.File.FileName;
+        var fileName = model.FileName ?? model.File.FileName ?? string.Empty;
         var title = model.Title ??
                     CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
-        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now,
-            new DocumentMetadata(fileName, title, model.Author));
+        var document = new PaperlessDocument(id, s3Path, model.File.Length, DateTimeOffset.Now, new DocumentMetadata(fileName, title, model.Author));
+
+        // Validate
+        var validator = new PaperlessDocumentValidator();
+        var results = validator.Validate(document);
+
+        if (!results.IsValid)
+        {
+            // add errors to modelstate leverage system.componentmodel
+            logger.LogWarning("Document {documentId} failed validation: {errors}", id, results.Errors);
+
+            return TypedResults.UnprocessableEntity();
+        }
 
         // Save document to repository
         await documentRepository.CreateAsync(document, ct);
 
         // Publish message to RabbitMQ
-        var message = $"Document {id.Value} uploaded with title '{title}'";
-        messageQueueService.PublishMessage(message); // Publishes the document info for OCR processing
+        var message = new DocumentUploadedMessage(id, s3Path);
+        messageQueueService.Publish(message); // Publishes the document info for OCR processing
 
         logger.LogInformation("Document {documentId} uploaded and message sent to queue.", id);
 
@@ -96,8 +193,10 @@ public static class DocumentEndpoints
     }
 
     public static async Task<Results<Ok, NotFound<Guid>>> DeleteDocumentAsync([FromRoute] Guid id,
-        IDocumentRepository documentRepository, ILogger logger, CancellationToken ct = default)
+        IDocumentRepository documentRepository, ILoggerFactory loggerFactory, CancellationToken ct = default)
     {
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+
         logger.LogInformation("Deleting document: {documentId}", id);
 
         var success = await documentRepository.DeleteAsync(new DocumentId(id), ct);
@@ -106,6 +205,4 @@ public static class DocumentEndpoints
 
         return TypedResults.Ok();
     }
-
-    #endregion
 }

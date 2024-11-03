@@ -6,6 +6,7 @@ using Infrastructure.Repositories.EntityFrameworkCore.Repositories;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Mappings;
 using RabbitMQ.Client;
+using WebApi.Services.Messaging;
 
 namespace WebApi.Extensions;
 
@@ -67,7 +68,7 @@ public static class ServiceExtensions
         );
 
         // Register MessageQueueService as a singleton
-        services.AddSingleton<MessageQueueService>();
+        services.AddSingleton<IMessageQueueService, MessageQueueService>();
 
         return services;
     }
