@@ -13,7 +13,7 @@ using WebApi.Models;
 using WebApi.Services.Messaging;
 using Xunit;
 
-namespace WebApi.Tests;
+namespace WebApi.Tests.Tests;
 
 public class DocumentEndpointsTests
 {
@@ -58,7 +58,7 @@ public class DocumentEndpointsTests
 
         // Act
         var result = await DocumentEndpoints.GetDocumentAsync(documentId.Value, _mockRepository.Object, _mockLogger.Object);
-        
+
         // Assert
         Assert.IsType<Ok<PaperlessDocument>>(result.Result);
         Assert.Equal(document, ((Ok<PaperlessDocument>)result.Result).Value);

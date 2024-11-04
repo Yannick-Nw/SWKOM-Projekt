@@ -36,15 +36,20 @@ public class DocumentRepository(PaperlessDbContext dbContext, IMapper mapper) : 
     }
     public async Task<bool> UpdateAsync(PaperlessDocument document, CancellationToken ct = default)
     {
-        var dbo = mapper.Map<PaperlessDocumentDbo>(document);
+        var dbo = await dbContext.Documents.FindAsync([document.Id.Value], cancellationToken: ct);
+        if (dbo is null) return false;
 
+        mapper.Map(document, dbo);
         dbContext.Documents.Update(dbo);
 
         return await dbContext.SaveChangesAsync(ct) > 0;
     }
     public async Task<bool> DeleteAsync(DocumentId id, CancellationToken ct = default)
     {
-        dbContext.Remove(new PaperlessDocumentDbo { Id = id.Value });
+        var dbo = await dbContext.Documents.FindAsync([id.Value], cancellationToken: ct);
+        if (dbo is null) return false;
+
+        dbContext.Documents.Remove(dbo);
 
         return await dbContext.SaveChangesAsync(ct) > 0;
     }

@@ -16,6 +16,7 @@ using WebApi.Services.Messaging;
 using WebApi.Services.Messaging.Messages;
 using Microsoft.AspNetCore.Http;
 using FluentValidation;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WebApi.Endpoints;
 
@@ -26,6 +27,7 @@ public static class DocumentEndpoints
     /// </summary>
     /// <param name="builder">The <see cref="IEndpointRouteBuilder"/> to map the endpoints to.</param>
     /// <returns>The <see cref="IEndpointRouteBuilder"/> with the mapped endpoints.</returns>
+    [ExcludeFromCodeCoverage]
     public static IEndpointRouteBuilder MapDocumentEndpoints(this IEndpointRouteBuilder builder)
     {
         var group = builder.MapGroup("api/document");

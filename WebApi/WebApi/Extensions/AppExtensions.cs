@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WebApi.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class AppExtensions
 {
     public static IApplicationBuilder UsePaperless(this WebApplication app)

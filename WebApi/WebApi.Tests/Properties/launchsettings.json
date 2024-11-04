@@ -1,0 +1,9 @@
+﻿{
+  "profiles": {
+    "Run With Code Coverage": {
+      "commandName": "Project",
+      "commandLineArgs": "build",
+      "launchBrowser": false
+    }
+  }
+}

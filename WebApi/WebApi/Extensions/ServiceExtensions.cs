@@ -7,9 +7,12 @@ using Microsoft.EntityFrameworkCore;
 using WebApi.Mappings;
 using RabbitMQ.Client;
 using WebApi.Services.Messaging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace WebApi.Extensions;
 
+
+[ExcludeFromCodeCoverage]
 public static class ServiceExtensions
 {
     public static IServiceCollection RegisterPaperless(this IServiceCollection services, IConfiguration configuration)

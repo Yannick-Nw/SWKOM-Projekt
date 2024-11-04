@@ -3,12 +3,14 @@ using Domain.Entities;
 using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Infrastructure;
 
+[ExcludeFromCodeCoverage]
 public class InfrastructureProfile : Profile
 {
     public InfrastructureProfile()

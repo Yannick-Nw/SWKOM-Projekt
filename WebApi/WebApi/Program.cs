@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 using WebApi.Endpoints;
 using WebApi.Extensions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,3 +37,8 @@ app.UseRouting();
 app.UsePaperless();
 
 app.Run();
+
+/// <summary>
+///  Exclude this file from code coverage
+/// </summary>
+[ExcludeFromCodeCoverage] public partial class Program { }

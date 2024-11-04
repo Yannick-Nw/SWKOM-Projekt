@@ -40,7 +40,7 @@ public class PaperlessDocument
 
     /// <summary>Update document metadata</summary>
     /// <exception cref="ValidationException">Validation failed.</exception>
-    void SetMetadata(DocumentMetadata metadata)
+    public void SetMetadata(DocumentMetadata metadata)
     {
         // Validate
         var validator = new DocumentMetadataValidator();
