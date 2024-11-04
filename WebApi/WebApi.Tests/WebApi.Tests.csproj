@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<Target Name="GenerateAndOpenCoverageReport">
-		<Exec Command="dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./Coverage/" />
+		<Exec Command="dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=./Coverage/" />
 
 		<Exec Command="reportgenerator -reports:Coverage/coverage.opencover.xml -targetdir:Coverage/coveragereport" />
 

@@ -7,8 +7,8 @@ public class DocumentMetadataValidator : AbstractValidator<DocumentMetadata>
 {
     public DocumentMetadataValidator()
     {
-        RuleFor(x => x.FileName).NotEmpty();
-        RuleFor(x => x.Title).NotEmpty();
-        RuleFor(x => x.Author).NotEmpty();
+        RuleFor(x => x.FileName).NotEmpty().WithMessage("File name must not be empty.");
+        RuleFor(x => x.Title).NotEmpty().WithMessage("Title must not be empty.");
+        RuleFor(x => x.Author).NotEmpty().WithMessage("Author must not be empty.");
     }
 }

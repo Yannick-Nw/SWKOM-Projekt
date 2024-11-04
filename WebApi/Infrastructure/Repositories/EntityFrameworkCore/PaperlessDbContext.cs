@@ -6,7 +6,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Infrastructure.Repositories.EntityFrameworkCore;
 
-[ExcludeFromCodeCoverage]
 public class PaperlessDbContext(DbContextOptions<PaperlessDbContext> options) : DbContext(options)
 {
     public DbSet<PaperlessDocumentDbo> Documents { get; set; } = null!;

@@ -162,12 +162,12 @@ public static class DocumentEndpoints
 
         logger.LogInformation("Uploading document: {model}", model);
 
-        // Upload to S3
-        var s3Path = Guid.NewGuid().ToString(); // Mocked
-
         var fileName = model.FileName ?? model.File.FileName ?? string.Empty;
         var title = model.Title ??
                     CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
+
+        // Upload to S3
+        var s3Path = Guid.NewGuid().ToString(); // TODO
 
         // Create document domain entity
         PaperlessDocument document;

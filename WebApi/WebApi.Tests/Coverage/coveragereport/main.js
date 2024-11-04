@@ -232,6 +232,7 @@ var assemblies = [
     "name": "Infrastructure",
     "classes": [
       { "name": "Infrastructure.Repositories.EntityFrameworkCore.Dbos.PaperlessDocumentDbo", "rp": "Infrastructure_PaperlessDocumentDbo.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 26, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
+      { "name": "Infrastructure.Repositories.EntityFrameworkCore.PaperlessDbContext", "rp": "Infrastructure_PaperlessDbContext.html", "cl": 7, "ucl": 0, "cal": 7, "tl": 20, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
       { "name": "Infrastructure.Repositories.EntityFrameworkCore.Repositories.DocumentRepository", "rp": "Infrastructure_DocumentRepository.html", "cl": 23, "ucl": 4, "cal": 27, "tl": 56, "cb": 2, "tb": 4, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
     ]},
   {
@@ -239,7 +240,7 @@ var assemblies = [
     "classes": [
       { "name": "WebApi.Endpoints.DocumentEndpoints", "rp": "WebApi_DocumentEndpoints.html", "cl": 41, "ucl": 0, "cal": 41, "tl": 209, "cb": 10, "tb": 10, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
       { "name": "WebApi.Models.UploadDocumentModel", "rp": "WebApi_UploadDocumentModel.html", "cl": 1, "ucl": 0, "cal": 1, "tl": 5, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
-      { "name": "WebApi.Services.Messaging.MessageQueueService", "rp": "WebApi_MessageQueueService.html", "cl": 0, "ucl": 18, "cal": 18, "tl": 40, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
+      { "name": "WebApi.Services.Messaging.MessageQueueService", "rp": "WebApi_MessageQueueService.html", "cl": 0, "ucl": 18, "cal": 18, "tl": 42, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
       { "name": "WebApi.Services.Messaging.Messages.DocumentUploadedMessage", "rp": "WebApi_DocumentUploadedMessage.html", "cl": 2, "ucl": 0, "cal": 2, "tl": 10, "cb": 0, "tb": 0, "cm": 0, "tm": 0, "lch": [], "bch": [], "mch": [], "hc": [], "metrics": { } },
     ]},
 ];

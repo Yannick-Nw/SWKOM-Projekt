@@ -6,7 +6,7 @@ using WebApi.Services.Messaging.Messages;
 
 namespace WebApi.Services.Messaging;
 
-public class MessageQueueService : IMessageQueueService
+public sealed class MessageQueueService : IMessageQueueService
 {
     private readonly IModel _channel;
     private readonly IConnection _connection;
@@ -18,7 +18,9 @@ public class MessageQueueService : IMessageQueueService
         _logger = logger;
 
         _channel = _connection.CreateModel();
-        _channel.QueueDeclare(queue: "document_ocr_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+
+        // Create queue
+        _channel.QueueDeclare(queue: IMessageQueueService.DOCUMENT_OCR_CHANNEL, durable: false, exclusive: false, autoDelete: false, arguments: null);
     }
 
     public void Publish<T>(T message) where T : IMessage
