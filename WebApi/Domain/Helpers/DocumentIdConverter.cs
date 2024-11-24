@@ -6,8 +6,11 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Domain.Entities.Documents;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Domain.Helpers;
+
+[ExcludeFromCodeCoverage]
 public class DocumentIdConverter : JsonConverter<DocumentId>
 {
     public override DocumentId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => new(reader.GetGuid());

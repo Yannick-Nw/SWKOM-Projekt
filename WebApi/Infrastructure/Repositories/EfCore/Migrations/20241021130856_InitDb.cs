@@ -6,43 +6,42 @@ using System.Diagnostics.CodeAnalysis;
 
 #pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
 
-namespace Infrastructure.Repositories.EFCore.Migrations
+namespace Infrastructure.Repositories.EFCore.Migrations;
+
+/// <inheritdoc />
+[ExcludeFromCodeCoverage]
+public partial class InitDb : Migration
 {
     /// <inheritdoc />
-    [ExcludeFromCodeCoverage]
-    public partial class InitDb : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.CreateTable(
-                name: "Tests",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Name = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tests", x => x.Id);
-                });
+        migrationBuilder.CreateTable(
+            name: "Tests",
+            columns: table => new
+            {
+                Id = table.Column<int>(type: "integer", nullable: false)
+                    .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                Name = table.Column<string>(type: "text", nullable: false)
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_Tests", x => x.Id);
+            });
 
-            migrationBuilder.InsertData(
-                table: "Tests",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Test" },
-                    { 2, "Test 2" }
-                });
-        }
+        migrationBuilder.InsertData(
+            table: "Tests",
+            columns: new[] { "Id", "Name" },
+            values: new object[,]
+            {
+                { 1, "Test" },
+                { 2, "Test 2" }
+            });
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(
-                name: "Tests");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropTable(
+            name: "Tests");
     }
 }

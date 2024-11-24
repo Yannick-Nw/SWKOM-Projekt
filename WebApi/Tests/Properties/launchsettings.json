@@ -1,0 +1,10 @@
+﻿{
+  "profiles": {
+    "Run With Code Coverage": {
+      "commandName": "Executable",
+      "executablePath": "dotnet",
+      "commandLineArgs": "msbuild /t:RunTestsAndGenerateReport",
+      "workingDirectory": "$(ProjectDir)"
+    }
+  }
+}

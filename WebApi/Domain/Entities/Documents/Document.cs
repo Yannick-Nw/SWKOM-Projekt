@@ -44,4 +44,11 @@ public class Document
 
         Metadata = metadata;
     }
+
+    // override equals operator
+    public static bool operator ==(Document left, Document right) => left?.Id == right?.Id;
+    public static bool operator !=(Document left, Document right) => !(left == right);
+
+    public override int GetHashCode() => Id.GetHashCode();
+    public override bool Equals(object? obj) => obj is Document document && this == document;
 }

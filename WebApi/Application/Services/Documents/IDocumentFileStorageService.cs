@@ -18,7 +18,7 @@ public interface IDocumentFileStorageService
     /// <summary>
     /// Retrieve file from storage
     /// </summary>
-    Task<DocumentFile> GetAsync(DocumentId id, CancellationToken ct = default);
+    Task<DocumentFile?> GetAsync(DocumentId id, CancellationToken ct = default);
 
     /// <summary>
     /// Upload file to storage
