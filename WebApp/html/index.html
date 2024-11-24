@@ -22,12 +22,6 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label class="label">File Name</label>
-                    <div class="control">
-                        <input class="input" type="text" id="documentFileName" placeholder="Optional File Name">
-                    </div>
-                </div>
-                <div class="field">
                     <label class="label">Title</label>
                     <div class="control">
                         <input class="input" type="text" id="documentTitle" placeholder="Document Title">
@@ -78,7 +72,6 @@
         // Function to upload a new document
         async function uploadDocument() {
             const fileInput = document.getElementById('documentFile');
-            const fileName = document.getElementById('documentFileName').value;
             const title = document.getElementById('documentTitle').value;
             const author = document.getElementById('documentAuthor').value;
 
@@ -89,7 +82,6 @@
 
             const formData = new FormData();
             formData.append('File', fileInput.files[0]);
-            if (fileName) formData.append('FileName', fileName);
             if (title) formData.append('Title', title);
             if (author) formData.append('Author', author);
 
@@ -102,7 +94,6 @@
                 if (response.ok) {
                     fetchDocuments();
                     fileInput.value = '';
-                    document.getElementById('documentFileName').value = '';
                     document.getElementById('documentTitle').value = '';
                     document.getElementById('documentAuthor').value = '';
                 } else {

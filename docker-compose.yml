@@ -1,12 +1,55 @@
 services:
+  minio:
+    image: minio/minio:latest
+    ports:
+        - "9000:9000"  # MinIO API
+        - "9090:9090"  # MinIO UI
+    environment:
+        MINIO_ROOT_USER: minio      # Admin username
+        MINIO_ROOT_PASSWORD: minio123  # Admin password
+    command: server /data --console-address ":9090"
+    volumes:
+        - .minio_data:/data  # Persistent storage
+    networks:
+        - backend
+
+  ocr-worker:
+    build:
+        context: ./WebApi/OcrWorker
+        additional_contexts:
+            domain: ./WebApi/Domain
+            application: ./WebApi/Application
+            infrastructure: ./WebApi/Infrastructure
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
+      RABBITMQ_PORT: 5672
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+    depends_on:
+      webapi:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - backend
+
   rabbitmq:
-    build: ./RabbitMQ
+    build: ./RabbitMq
     ports:
       - "5672:5672"       # RabbitMQ port
       - "9093:15672"     # Management interface
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 15s
+      timeout: 30s
+      retries: 5
     networks:
         - backend
   
@@ -35,12 +78,21 @@ services:
 
   webapi:
     build: ./WebApi
-    depends_on:
-     - postgres
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      ASPNETCORE_ENVIRONMENT: Development
+      MINIO_HOST: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
     ports:
       - "8080:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - frontend
       - backend
@@ -66,4 +118,5 @@ networks:
         driver: bridge
 
 volumes:
-    postgres_data:   
+    postgres_data:
+    minio_data:

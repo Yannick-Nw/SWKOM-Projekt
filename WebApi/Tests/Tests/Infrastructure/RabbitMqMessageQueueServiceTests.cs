@@ -41,7 +41,7 @@ public class RabbitMqMessageQueueServiceTests
         // Assert
         mockChannel.Verify(channel => channel.BasicPublish(
             It.IsAny<string>(),
-            It.Is<string>(testMessage.Channel, StringComparer.Ordinal),
+            It.Is<string>(TestMessage.Channel, StringComparer.Ordinal),
             It.IsAny<bool>(),
             It.IsAny<IBasicProperties>(),
             It.Is<ReadOnlyMemory<byte>>(body => JsonSerializer.Deserialize<TestMessage>(Encoding.UTF8.GetString(body.ToArray()), new JsonSerializerOptions()) == testMessage) // Convert back to object for equality comparison
@@ -80,6 +80,6 @@ public class RabbitMqMessageQueueServiceTests
     // Helper class for testing
     private record TestMessage(string Content) : IMessage
     {
-        public string Channel => IMessageQueueService.DOCUMENT_OCR_CHANNEL;
+        public static string Channel => IMessageQueueService.DOCUMENT_OCR_CHANNEL;
     }
 }

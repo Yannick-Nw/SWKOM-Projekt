@@ -7,11 +7,11 @@
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
     <DockerServiceName>webapi</DockerServiceName>
-	<DockerComposeProjectName>paperless</DockerComposeProjectName>
+    <DockerComposeProjectName>paperless</DockerComposeProjectName>
     <UserSecretsId>733308a7-1fb9-4d59-a9cd-5047320388d9</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="docker-compose.env" />
+    <None Include=".env" />
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
   </ItemGroup>

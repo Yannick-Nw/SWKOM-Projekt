@@ -141,7 +141,6 @@ public class DocumentEndpointsTests
 
         var model = new UploadDocumentModel(mockFile.Object)
         {
-            FileName = "file.pdf",
             Title = "Title",
             Author = "Author"
         };

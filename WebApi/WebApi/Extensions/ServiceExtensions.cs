@@ -7,6 +7,7 @@ using RabbitMQ.Client;
 using System.Diagnostics.CodeAnalysis;
 using Infrastructure.Extensions;
 using Infrastructure.Repositories.EfCore;
+using Application.Services.Documents;
 
 namespace WebApi.Extensions;
 
@@ -19,6 +20,7 @@ public static class ServiceExtensions
         services
             .AddMappings()
             .AddLogging()
+            .AddScoped<IDocumentService, DocumentService>()
             .AddInfrastructure(configuration);
 
         return services;
@@ -52,13 +54,17 @@ public static class ServiceExtensions
         int rabbitMqPort = configuration.GetValue<int>("RabbitMQ:Port", 5672); // Set default 5672 here
         var rabbitMqUsername = configuration.GetValue<string>("RabbitMQ:Username") ?? "guest";
         var rabbitMqPassword = configuration.GetValue<string>("RabbitMQ:Password") ?? "guest";
-        // MinIO settings
 
+        // MinIO settings
+        var minIoHost = Environment.GetEnvironmentVariable("MINIO_HOST")!;
+        var minIoPort = int.Parse(Environment.GetEnvironmentVariable("MINIO_PORT")!);
+        var minIoAccessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY")!;
+        var minIoSecretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY")!;
 
         services
             .AddRepositoryEfCore(connectionString)
             .AddMessagingRabbitMq(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
-            .AddFileStorageMinIO();
+            .AddFileStorageMinIO(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey);
 
         return services;
     }

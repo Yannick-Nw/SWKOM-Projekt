@@ -5,7 +5,10 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
 # Publish
-COPY . . 
+COPY ./Application ./Application 
+COPY ./Domain ./Domain
+COPY ./Infrastructure ./Infrastructure
+COPY ./WebApi ./WebApi
 RUN dotnet publish WebApi -c Release -o publish /p:UseAppHost=false
 
 # This stage is used to run the service project
