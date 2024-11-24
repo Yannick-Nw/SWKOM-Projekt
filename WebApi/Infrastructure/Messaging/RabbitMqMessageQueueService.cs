@@ -1,18 +1,22 @@
+﻿using Domain.Messaging;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Channels;
-using WebApi.Services.Messaging.Messages;
+using System.Threading.Tasks;
 
-namespace WebApi.Services.Messaging;
+namespace Infrastructure.Messaging;
 
-public sealed class MessageQueueService : IMessageQueueService
+public class RabbitMqMessageQueueService : IMessageQueueService
 {
     private readonly IModel _channel;
     private readonly IConnection _connection;
     private readonly ILogger _logger;
 
-    public MessageQueueService(IConnectionFactory connectionFactory, ILogger<MessageQueueService> logger)
+    public RabbitMqMessageQueueService(IConnectionFactory connectionFactory, ILogger<RabbitMqMessageQueueService> logger)
     {
         _connection = connectionFactory.CreateConnection();
         _logger = logger;

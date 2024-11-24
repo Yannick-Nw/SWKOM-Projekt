@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "postgres": "StartWithoutDebugging",
+        "postgres-adminer": "StartWithoutDebugging",
+        "rabbitmq": "StartWithoutDebugging",
+        "webapi": "StartWithoutDebugging",
+        "webapp": "StartWithoutDebugging"
+      }
+    }
+  }
+}

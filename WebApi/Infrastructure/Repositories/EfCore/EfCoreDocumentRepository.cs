@@ -1,40 +1,40 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
-using Domain.Entities;
+using Domain.Entities.Documents;
 using Domain.Repositories;
-using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
+using Infrastructure.Repositories.EfCore.Dbos;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Repositories.EntityFrameworkCore.Repositories;
+namespace Infrastructure.Repositories.EfCore;
 
-public class DocumentRepository(PaperlessDbContext dbContext, IMapper mapper) : IDocumentRepository
+public class EfCoreDocumentRepository(PaperlessDbContext dbContext, IMapper mapper) : IDocumentRepository
 {
-    public async Task<IReadOnlyList<PaperlessDocument>> GetAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyList<Document>> GetAsync(CancellationToken ct = default)
     {
         var dbos = await dbContext.Documents.ToListAsync(ct);
 
-        return mapper.Map<IReadOnlyList<PaperlessDocument>>(dbos);
+        return mapper.Map<IReadOnlyList<Document>>(dbos);
     }
-    public async Task<PaperlessDocument?> GetAsync(DocumentId id, CancellationToken ct = default)
+    public async Task<Document?> GetAsync(DocumentId id, CancellationToken ct = default)
     {
         var dbo = await dbContext.Documents.FindAsync([id.Value], cancellationToken: ct);
 
-        return mapper.Map<PaperlessDocument>(dbo);
+        return mapper.Map<Document>(dbo);
     }
 
-    public async Task CreateAsync(PaperlessDocument document, CancellationToken ct = default)
+    public async Task CreateAsync(Document document, CancellationToken ct = default)
     {
-        var dbo = mapper.Map<PaperlessDocumentDbo>(document);
+        var dbo = mapper.Map<DocumentDbo>(document);
 
         dbContext.Documents.Add(dbo);
 
         await dbContext.SaveChangesAsync(ct);
     }
-    public async Task<bool> UpdateAsync(PaperlessDocument document, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(Document document, CancellationToken ct = default)
     {
         var dbo = await dbContext.Documents.FindAsync([document.Id.Value], cancellationToken: ct);
         if (dbo is null) return false;

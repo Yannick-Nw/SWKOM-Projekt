@@ -1,5 +1,7 @@
-﻿using AutoMapper;
+﻿using Application.Interfaces;
+using AutoMapper;
 using System.Diagnostics.CodeAnalysis;
+using WebApi.Models;
 
 namespace WebApi.Mappings;
 
@@ -8,6 +10,8 @@ public class PaperlessProfile : Profile
 {
     public PaperlessProfile()
     {
-        // Empty for now, other mappings are defined in projects
+        // Map IFormFile to IFile
+        CreateMap<IFormFile, IFile>()
+            .ConvertUsing(src => new ApplicationFile(src));
     }
 }

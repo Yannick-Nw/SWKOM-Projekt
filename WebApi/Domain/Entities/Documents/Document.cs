@@ -1,25 +1,21 @@
-﻿using Domain.Validation;
-using FluentValidation;
+﻿using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Entities;
-public class PaperlessDocument
+namespace Domain.Entities.Documents;
+
+public class Document
 {
     public DocumentId Id { get; }
-    public string Path { get; }
-    public long Size { get; }
     public DateTimeOffset UploadTime { get; }
     public DocumentMetadata Metadata { get; private set; }
 
-    public PaperlessDocument(DocumentId id, string path, long size, DateTimeOffset uploadTime, DocumentMetadata metadata)
+    internal Document(DocumentId id, DateTimeOffset uploadTime, DocumentMetadata metadata)
     {
         Id = id;
-        Path = path;
-        Size = size;
         UploadTime = uploadTime;
         Metadata = metadata;
     }
@@ -27,13 +23,13 @@ public class PaperlessDocument
 
     /// <summary>Create a new document</summary>
     /// <exception cref="ValidationException">Validation failed.</exception>
-    public static PaperlessDocument New(string path, long size, DateTimeOffset uploadTime, DocumentMetadata metadata)
+    public static Document New(DateTimeOffset uploadTime, DocumentMetadata metadata)
     {
-        var document = new PaperlessDocument(DocumentId.New(), path, size, uploadTime, metadata);
+        var document = new Document(DocumentId.New(), uploadTime, metadata);
 
         // Validate
-        var validator = new PaperlessDocumentValidator();
-        validator.ValidateAndThrow(document);
+        var validator = new DocumentValidator();
+        validator.Validate(document);
 
         return document;
     }

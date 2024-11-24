@@ -1,18 +1,18 @@
 ﻿using Domain.Entities;
-using Infrastructure.Repositories.EntityFrameworkCore.Dbos;
+using Infrastructure.Repositories.EfCore.Dbos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Infrastructure.Repositories.EntityFrameworkCore;
+namespace Infrastructure.Repositories.EfCore;
 
 public class PaperlessDbContext(DbContextOptions<PaperlessDbContext> options) : DbContext(options)
 {
-    public DbSet<PaperlessDocumentDbo> Documents { get; set; } = null!;
+    public DbSet<DocumentDbo> Documents { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.Entity<PaperlessDocumentDbo>()
+        builder.Entity<DocumentDbo>()
             .ToTable("Document");
 
         base.OnModelCreating(builder);

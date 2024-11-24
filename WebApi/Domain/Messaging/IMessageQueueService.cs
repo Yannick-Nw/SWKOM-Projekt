@@ -1,6 +1,4 @@
-﻿using WebApi.Services.Messaging.Messages;
-
-namespace WebApi.Services.Messaging;
+﻿namespace Domain.Messaging;
 
 public interface IMessageQueueService : IDisposable
 {

@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace Domain.Entities;
+namespace Domain.Entities.Documents;
 
 [JsonConverter(typeof(DocumentIdConverter))]
 public record DocumentId(Guid Value)

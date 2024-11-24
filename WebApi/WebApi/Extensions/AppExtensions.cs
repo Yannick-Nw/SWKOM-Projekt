@@ -1,4 +1,4 @@
-﻿using Infrastructure.Repositories.EntityFrameworkCore;
+﻿using Infrastructure.Repositories.EfCore;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;

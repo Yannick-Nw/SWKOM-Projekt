@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace WebApi.Services.Messaging.Messages;
+namespace Domain.Messaging;
 
 public interface IMessage
 {

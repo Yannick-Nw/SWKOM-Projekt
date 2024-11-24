@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using Domain.Entities;
+using Domain.Entities.Documents;
 using Infrastructure;
-using Infrastructure.Repositories.EntityFrameworkCore;
-using Infrastructure.Repositories.EntityFrameworkCore.Repositories;
+using Infrastructure.Repositories.EfCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,11 +20,9 @@ public class DocumentRepositoryTests
     {
         // Arrange
         var repository = GetDocumentRepository();
-        PaperlessDocument document = PaperlessDocument.New(
-            "path/to/document",
-            12345,
+        Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("fileName", "title", "author")
+            new DocumentMetadata("title", "author")
         );
 
         // Act
@@ -33,7 +31,9 @@ public class DocumentRepositoryTests
         // Assert
         var fetchedDocument = await repository.GetAsync(document.Id);
         Assert.NotNull(fetchedDocument);
-        Assert.Equal("path/to/document", fetchedDocument.Path);
+        Assert.Equal(document.Id, fetchedDocument.Id);
+        Assert.Equal(document.UploadTime, fetchedDocument.UploadTime);
+        Assert.Equal(document.Metadata, fetchedDocument.Metadata);
     }
 
     [Fact]
@@ -41,25 +41,22 @@ public class DocumentRepositoryTests
     {
         // Arrange
         var repository = GetDocumentRepository();
-        PaperlessDocument document = PaperlessDocument.New(
-            "path/to/document",
-            12345,
+        Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("fileName", "title", "author")
+            new DocumentMetadata("title", "author")
         );
+        var newMetadata = new DocumentMetadata("newTitle", "newAuthor");
         await repository.CreateAsync(document);
 
         // Act
-        document.SetMetadata(new DocumentMetadata("newFileName", "newTitle", "newAuthor"));
+        document.SetMetadata(newMetadata);
         var updateResult = await repository.UpdateAsync(document);
 
         // Assert
         Assert.True(updateResult);
         var updatedDocument = await repository.GetAsync(document.Id);
         Assert.NotNull(updatedDocument);
-        Assert.Equal("newFileName", updatedDocument.Metadata.FileName);
-        Assert.Equal("newTitle", updatedDocument.Metadata.Title);
-        Assert.Equal("newAuthor", updatedDocument.Metadata.Author);
+        Assert.Equal(newMetadata, updatedDocument.Metadata);
     }
 
     [Fact]
@@ -67,11 +64,9 @@ public class DocumentRepositoryTests
     {
         // Arrange
         var repository = GetDocumentRepository();
-        PaperlessDocument document = PaperlessDocument.New(
-            "path/to/document",
-            12345,
+        Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("fileName", "title", "author")
+            new DocumentMetadata("title", "author")
         );
         await repository.CreateAsync(document);
 
@@ -84,9 +79,9 @@ public class DocumentRepositoryTests
         Assert.Null(deletedDocument);
     }
 
-    private static DocumentRepository GetDocumentRepository()
+    private static EfCoreDocumentRepository GetDocumentRepository()
     {
-        return new DocumentRepository(GetPaperlessDbContext(), GetMapper());
+        return new EfCoreDocumentRepository(GetPaperlessDbContext(), GetMapper());
     }
 
     private static PaperlessDbContext GetPaperlessDbContext()
