@@ -1,10 +1,9 @@
 ﻿namespace Application.Interfaces;
 
-public interface IFile
+public interface IFile : IDisposable
 {
     string Name { get; }
     string ContentType { get; }
-    long Length { get; }
 
     Task<Stream> OpenAsync();
 }

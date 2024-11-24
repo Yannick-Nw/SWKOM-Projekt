@@ -4,6 +4,5 @@ namespace Domain.Messaging;
 
 public interface IMessage
 {
-    [JsonIgnore]
-    string Channel { get; }
+    static abstract string Channel { get; }
 }

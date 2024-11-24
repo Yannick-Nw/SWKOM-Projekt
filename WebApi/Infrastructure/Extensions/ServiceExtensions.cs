@@ -1,4 +1,5 @@
-﻿using Application.Services.Documents;
+﻿using Amazon.S3;
+using Application.Services.Documents;
 using Domain.Messaging;
 using Domain.Repositories;
 using Infrastructure.FileStorage;
@@ -31,10 +32,17 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddFileStorageMinIO(this IServiceCollection services)
+    public static IServiceCollection AddFileStorageMinIO(this IServiceCollection services, string host, int port, string accessKey, string secretKey)
     {
+        var s3Config = new AmazonS3Config
+        {
+            ServiceURL = $"http://{host}:{port}",
+            ForcePathStyle = true // Required for MinIO
+        };
+
         services
-            .AddScoped<IDocumentFileStorageService, MinIOFileStorageService>();
+            .AddSingleton(new AmazonS3Client(accessKey, secretKey, s3Config))
+            .AddScoped<IDocumentFileStorageService, MinIODocumentFileStorageService>();
 
         return services;
     }

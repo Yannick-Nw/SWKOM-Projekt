@@ -13,7 +13,7 @@ namespace Application.Services.Documents;
 /// <summary>
 /// Implemented by Infrastructure layer to provide file storage for documents
 /// </summary>
-public interface IDocumentFileStorageService
+public interface IDocumentFileStorageService : IDisposable
 {
     /// <summary>
     /// Retrieve file from storage

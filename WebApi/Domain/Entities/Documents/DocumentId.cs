@@ -12,4 +12,6 @@ namespace Domain.Entities.Documents;
 public record DocumentId(Guid Value)
 {
     public static DocumentId New() => new(Guid.NewGuid());
+
+    public override string ToString() => Value.ToString();
 }

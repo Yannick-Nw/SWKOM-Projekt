@@ -162,9 +162,8 @@ public static class DocumentEndpoints
         logger.LogInformation("Uploading document: {model}", model);
 
         // Get file info
-        var fileName = model.FileName ?? model.File.FileName ?? string.Empty;
         var title = model.Title ??
-                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(fileName));
+                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(model.File.FileName));
         var file = mapper.Map<IFile>(model.File);
 
         // Create document domain entity

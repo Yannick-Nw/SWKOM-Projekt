@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Messaging;
 
-public class RabbitMqMessageQueueService : IMessageQueueService
+public sealed class RabbitMqMessageQueueService : IMessageQueueService
 {
     private readonly IModel _channel;
     private readonly IConnection _connection;
@@ -19,28 +19,25 @@ public class RabbitMqMessageQueueService : IMessageQueueService
     public RabbitMqMessageQueueService(IConnectionFactory connectionFactory, ILogger<RabbitMqMessageQueueService> logger)
     {
         _connection = connectionFactory.CreateConnection();
-        _logger = logger;
-
         _channel = _connection.CreateModel();
-
-        // Create queue
-        _channel.QueueDeclare(queue: IMessageQueueService.DOCUMENT_OCR_CHANNEL, durable: false, exclusive: false, autoDelete: false, arguments: null);
+        _logger = logger;
     }
 
     public void Publish<T>(T message) where T : IMessage
     {
+        _channel.QueueDeclare(queue: T.Channel, durable: true, exclusive: false, autoDelete: false, arguments: null);
+
         // Convert message to json byte array
         var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-        _channel.BasicPublish(exchange: string.Empty, routingKey: message.Channel, basicProperties: null, body: body);
+        _channel.BasicPublish(exchange: string.Empty, routingKey: T.Channel, basicProperties: null, body: body);
         _logger.LogInformation("Message published: {message}", message);
     }
 
     public void Dispose()
     {
-        _channel.Close();
-        _connection.Close();
-
         _channel.Dispose();
         _connection.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }
