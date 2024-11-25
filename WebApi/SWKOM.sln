@@ -29,8 +29,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RabbitMq", "RabbitMq", "{B6
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApp", "WebApp", "{53C122D0-CEB4-4A91-BAC0-C02E777AAB1C}"
+	ProjectSection(SolutionItems) = preProject
+		..\WebApp\Dockerfile = ..\WebApp\Dockerfile
+		..\WebApp\nginx.conf = ..\WebApp\nginx.conf
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "html", "html", "{AF1E3427-0035-49E5-A2A8-D6E0CB390751}"
+	ProjectSection(SolutionItems) = preProject
+		..\WebApp\html\index.html = ..\WebApp\html\index.html
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Worker", "Worker", "{25E3B622-563D-4D6F-B210-D891A20361CF}"
 EndProject
