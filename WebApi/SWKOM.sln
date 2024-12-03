@@ -24,8 +24,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{E1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RabbitMq", "RabbitMq", "{B6CF7D25-8CA2-4759-9C6D-B23962B9431D}"
 	ProjectSection(SolutionItems) = preProject
-		..\RabbitMQ\Dockerfile = ..\RabbitMQ\Dockerfile
-		..\RabbitMQ\logging.conf = ..\RabbitMQ\logging.conf
+		..\RabbitMq\Dockerfile = ..\RabbitMq\Dockerfile
+		..\RabbitMq\logging.conf = ..\RabbitMq\logging.conf
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApp", "WebApp", "{53C122D0-CEB4-4A91-BAC0-C02E777AAB1C}"
