@@ -1,13 +1,15 @@
 services:
   minio:
+    hostname: ${MINIO__HOST}
     image: minio/minio:latest
     ports:
-        - "9000:9000"  # MinIO API
+        - "${MINIO__PORT}:9000"  # MinIO API
         - "9090:9090"  # MinIO UI
     environment:
-        MINIO_ROOT_USER: minio      # Admin username
-        MINIO_ROOT_PASSWORD: minio123  # Admin password
-    command: server /data --console-address ":9090"
+        MINIO_ROOT_USER: ${MINIO__ACCESS_KEY}      # Admin username
+        MINIO_ROOT_PASSWORD: ${MINIO__SECRET_KEY}  # Admin password
+    entrypoint: sh
+    command: -c 'mkdir -p /data/documents && /usr/bin/minio server /data --console-address :9090'
     volumes:
         - .minio_data:/data  # Persistent storage
     networks:
@@ -20,15 +22,8 @@ services:
             domain: ./WebApi/Domain
             application: ./WebApi/Application
             infrastructure: ./WebApi/Infrastructure
-    environment:
-      RABBITMQ_HOST: rabbitmq
-      RABBITMQ_USER: guest
-      RABBITMQ_PASS: guest
-      RABBITMQ_PORT: 5672
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
+    env_file:
+        - .env
     depends_on:
       webapi:
         condition: service_started
@@ -38,13 +33,14 @@ services:
       - backend
 
   rabbitmq:
+    hostname: ${RABBITMQ__HOST}
     build: ./RabbitMq
     ports:
-      - "5672:5672"       # RabbitMQ port
+      - "${RABBITMQ__PORT}:5672"       # RabbitMQ port
       - "9093:15672"     # Management interface
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ__USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ__PASS}
     healthcheck:
       test: rabbitmq-diagnostics check_port_connectivity
       interval: 15s
@@ -80,10 +76,8 @@ services:
     build: ./WebApi
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      MINIO_HOST: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESS_KEY: minio
-      MINIO_SECRET_KEY: minio123
+    env_file:
+        - .env
     ports:
       - "8080:8080"
     depends_on:

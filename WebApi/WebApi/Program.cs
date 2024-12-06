@@ -8,6 +8,8 @@ using WebApi.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();
+
 // Allow requests from WebApp
 builder.Services.AddCors(options =>
 {

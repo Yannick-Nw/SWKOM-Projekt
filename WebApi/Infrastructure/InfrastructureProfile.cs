@@ -19,10 +19,11 @@ public class InfrastructureProfile : Profile
         CreateMap<Document, DocumentDbo>()
             .ForMember(dbo => dbo.Id, opt => opt.MapFrom(doc => doc.Id.Value))
             .ForMember(dbo => dbo.UploadTime, opt => opt.MapFrom(doc => doc.UploadTime))
+            .ForMember(dbo => dbo.FileName, opt => opt.MapFrom(doc => doc.Metadata.FileName))
             .ForMember(dbo => dbo.Title, opt => opt.MapFrom(doc => doc.Metadata.Title))
             .ForMember(dbo => dbo.Author, opt => opt.MapFrom(doc => doc.Metadata.Author));
 
         CreateMap<DocumentDbo, Document>()
-            .ConvertUsing(dbo => new Document(new DocumentId(dbo.Id), dbo.UploadTime, new DocumentMetadata(dbo.Title, dbo.Author)));
+            .ConvertUsing(dbo => new Document(new DocumentId(dbo.Id), dbo.UploadTime, new DocumentMetadata(dbo.FileName, dbo.Title, dbo.Author)));
     }
 }

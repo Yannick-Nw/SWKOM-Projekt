@@ -2,7 +2,7 @@
 
 namespace Domain.Messaging;
 
-public interface IMessageQueueListener
+public interface IMessageQueueListener : IDisposable
 {
     IAsyncEnumerable<IReceivedMessage<T>> ListenAsync<T>(CancellationToken ct = default) where T : IMessage;
 }

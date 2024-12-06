@@ -11,40 +11,48 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+
 namespace Tests.Tests.Infrastructure;
+
+
 public class RabbitMqMessageQueueServiceTests
 {
     [Fact]
-    public void Publish_ShouldPublishMessageToQueue()
+    public async Task Publish_ShouldPublishMessageToQueue()
     {
         // Arrange
         var mockConnectionFactory = new Mock<IConnectionFactory>();
         var mockConnection = new Mock<IConnection>();
-        var mockChannel = new Mock<IModel>();
-        var mockLogger = new Mock<ILogger<RabbitMqMessageQueueService>>();
+        var mockChannel = new Mock<IChannel>();
+        var mockLoggerFactory = new Mock<ILoggerFactory>();
 
         mockConnectionFactory
-            .Setup(factory => factory.CreateConnection())
-            .Returns(mockConnection.Object);
+            .Setup(factory => factory.CreateConnectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockConnection.Object);
 
         mockConnection
-            .Setup(connection => connection.CreateModel())
-            .Returns(mockChannel.Object);
+            .Setup(connection => connection.CreateChannelAsync(It.IsAny<CreateChannelOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockChannel.Object);
 
-        var service = new RabbitMqMessageQueueService(mockConnectionFactory.Object, mockLogger.Object);
+        mockLoggerFactory
+            .Setup(factory => factory.CreateLogger(It.IsAny<string>()))
+            .Returns(new Mock<ILogger>().Object);
+
+        var service = new RabbitMqMessageQueueService(mockConnectionFactory.Object, mockLoggerFactory.Object);
 
         var testMessage = new TestMessage("Test Content");
 
         // Act
-        service.Publish(testMessage);
+        await service.PublishAsync(testMessage);
 
         // Assert
-        mockChannel.Verify(channel => channel.BasicPublish(
+        mockChannel.Verify(channel => channel.BasicPublishAsync<BasicProperties>(
             It.IsAny<string>(),
             It.Is<string>(TestMessage.Channel, StringComparer.Ordinal),
             It.IsAny<bool>(),
-            It.IsAny<IBasicProperties>(),
-            It.Is<ReadOnlyMemory<byte>>(body => JsonSerializer.Deserialize<TestMessage>(Encoding.UTF8.GetString(body.ToArray()), new JsonSerializerOptions()) == testMessage) // Convert back to object for equality comparison
+            It.IsAny<BasicProperties>(),
+            It.Is<ReadOnlyMemory<byte>>(body => JsonSerializer.Deserialize<TestMessage>(Encoding.UTF8.GetString(body.ToArray()), new JsonSerializerOptions()) == testMessage), // Convert back to object for equality comparison
+            It.IsAny<CancellationToken>()
         ), Times.Once);
     }
 
@@ -54,26 +62,28 @@ public class RabbitMqMessageQueueServiceTests
         // Arrange
         var mockConnectionFactory = new Mock<IConnectionFactory>();
         var mockConnection = new Mock<IConnection>();
-        var mockChannel = new Mock<IModel>();
-        var mockLogger = new Mock<ILogger<RabbitMqMessageQueueService>>();
+        var mockChannel = new Mock<IChannel>();
+        var mockLoggerFactory = new Mock<ILoggerFactory>();
 
         mockConnectionFactory
-            .Setup(factory => factory.CreateConnection())
-            .Returns(mockConnection.Object);
+            .Setup(factory => factory.CreateConnectionAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockConnection.Object);
 
         mockConnection
-            .Setup(connection => connection.CreateModel())
-            .Returns(mockChannel.Object);
+            .Setup(connection => connection.CreateChannelAsync(It.IsAny<CreateChannelOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(mockChannel.Object);
 
-        var service = new RabbitMqMessageQueueService(mockConnectionFactory.Object, mockLogger.Object);
+        mockLoggerFactory
+            .Setup(factory => factory.CreateLogger(It.IsAny<string>()))
+            .Returns(new Mock<ILogger>().Object);
+
+        var service = new RabbitMqMessageQueueService(mockConnectionFactory.Object, mockLoggerFactory.Object);
 
         // Act
         service.Dispose();
 
         // Assert
-        mockChannel.Verify(channel => channel.Close(), Times.Once);
         mockChannel.Verify(channel => channel.Dispose(), Times.Once);
-        mockConnection.Verify(connection => connection.Close(), Times.Once);
         mockConnection.Verify(connection => connection.Dispose(), Times.Once);
     }
 

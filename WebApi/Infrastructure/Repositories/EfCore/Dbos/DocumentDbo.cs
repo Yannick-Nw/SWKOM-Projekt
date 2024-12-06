@@ -11,6 +11,9 @@ public class DocumentDbo
     public DateTimeOffset UploadTime { get; set; }
 
     [Required]
+    public string FileName { get; set; } = null!;
+
+    [Required]
     public string Title { get; set; } = null!;
 
     public string? Author { get; set; }

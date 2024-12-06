@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Application.Interfaces;
+using Application.Interfaces.Files;
 using Application.Services.Documents;
 using AutoMapper;
 using Domain.Entities;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using WebApi.Endpoints;
+using WebApi.Mappings;
 using WebApi.Models;
 using Xunit;
 
@@ -32,8 +34,8 @@ public class DocumentEndpointsTests
 
         var documents = new List<Document>
         {
-            new Document(DocumentId.New(), DateTimeOffset.Now, new DocumentMetadata("Title 1", "Author 1")),
-            new Document(DocumentId.New(), DateTimeOffset.Now, new DocumentMetadata("Title 2", "Author 2"))
+            new Document(DocumentId.New(), DateTimeOffset.Now, new DocumentMetadata("file.pdf", "Title 1", "Author 1")),
+            new Document(DocumentId.New(), DateTimeOffset.Now, new DocumentMetadata("file.pdf", "Title 2", "Author 2"))
         };
         mockService.Setup(r => r.GetAsync(It.IsAny<CancellationToken>())).ReturnsAsync(documents);
 
@@ -55,7 +57,7 @@ public class DocumentEndpointsTests
         mockLoggerFactory.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
 
         var documentId = DocumentId.New();
-        var document = new Document(documentId, DateTimeOffset.Now, new DocumentMetadata("Title", "Author"));
+        var document = new Document(documentId, DateTimeOffset.Now, new DocumentMetadata("file.pdf", "Title", "Author"));
         mockService.Setup(r => r.GetAsync(documentId, It.IsAny<CancellationToken>())).ReturnsAsync(document);
 
         // Act
@@ -128,26 +130,29 @@ public class DocumentEndpointsTests
     [Fact]
     public async Task UploadDocumentAsync_ShouldReturnCreatedAtRoute()
     {
+        var mapper = new MapperConfiguration(conf => conf.AddProfile<PaperlessProfile>()).CreateMapper();
         // Arrange
         var mockService = new Mock<IDocumentService>();
-        var mockMapper = new Mock<IMapper>();
+        var mockFile = new Mock<IFormFile>();
         var mockLoggerFactory = new Mock<ILoggerFactory>();
         var mockLogger = new Mock<ILogger>();
-        mockLoggerFactory.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
+        
+        mockLoggerFactory
+            .Setup(l => l.CreateLogger(It.IsAny<string>()))
+            .Returns(mockLogger.Object);
 
-        var mockFile = new Mock<IFormFile>();
-        mockFile.Setup(f => f.FileName).Returns("file.pdf");
-        mockFile.Setup(f => f.Length).Returns(1024);
+        mockFile
+            .Setup(l => l.ContentType)
+            .Returns("application/pdf");
 
-        var model = new UploadDocumentModel(mockFile.Object)
-        {
-            Title = "Title",
-            Author = "Author"
-        };
-        mockService.Setup(r => r.CreateAsync(It.IsAny<Document>(), It.IsAny<IFile>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        mockService
+            .Setup(r => r.CreateAsync(It.IsAny<Document>(), It.IsAny<IFile>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var model = new UploadDocumentModel(mockFile.Object, "file.pdf", "Title", "Author");
 
         // Act
-        var result = await DocumentEndpoints.UploadDocumentAsync(model, mockService.Object, mockMapper.Object, mockLoggerFactory.Object);
+        var result = await DocumentEndpoints.UploadDocumentAsync(model, mockService.Object, mapper, mockLoggerFactory.Object);
 
         // Assert
         Assert.IsType<CreatedAtRoute>(result.Result);
@@ -157,18 +162,29 @@ public class DocumentEndpointsTests
     [Fact]
     public async Task UploadDocumentAsync_ShouldReturnUnprocessableEntity_WhenModelIsInvalid()
     {
+        var mapper = new MapperConfiguration(conf => conf.AddProfile<PaperlessProfile>()).CreateMapper();
         // Arrange
         var mockService = new Mock<IDocumentService>();
-        var mockMapper = new Mock<IMapper>();
+        var mockFile = new Mock<IFormFile>();
         var mockLoggerFactory = new Mock<ILoggerFactory>();
         var mockLogger = new Mock<ILogger>();
-        mockLoggerFactory.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(mockLogger.Object);
 
-        var model = new UploadDocumentModel(new Mock<IFormFile>().Object);
-        mockService.Setup(r => r.CreateAsync(It.IsAny<Document>(), It.IsAny<IFile>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        mockLoggerFactory
+            .Setup(l => l.CreateLogger(It.IsAny<string>()))
+            .Returns(mockLogger.Object);
+
+        mockFile
+            .Setup(l => l.ContentType)
+            .Returns("BADCONTENTTYPE/HERE");
+
+        mockService
+            .Setup(r => r.CreateAsync(It.IsAny<Document>(), It.IsAny<IFile>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        var model = new UploadDocumentModel(mockFile.Object, "file.pdf");
 
         // Act
-        var result = await DocumentEndpoints.UploadDocumentAsync(model, mockService.Object, mockMapper.Object, mockLoggerFactory.Object);
+        var result = await DocumentEndpoints.UploadDocumentAsync(model, mockService.Object, mapper, mockLoggerFactory.Object);
 
         // Assert
         Assert.IsType<UnprocessableEntity>(result.Result);

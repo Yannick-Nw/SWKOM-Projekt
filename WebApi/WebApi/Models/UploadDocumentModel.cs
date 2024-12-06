@@ -2,4 +2,4 @@
 
 namespace WebApi.Models;
 
-public record UploadDocumentModel([Required] IFormFile File, string? Title = null, string? Author = null);
+public record UploadDocumentModel([Required] IFormFile File, string FileName, string? Title = null, string? Author = null);

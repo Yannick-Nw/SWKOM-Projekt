@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Files;
 using Domain.Entities.Documents;
 using Domain.Messaging;
 using Domain.Repositories;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Application.Services.Documents;
 
-public class DocumentService(IDocumentRepository documentRepository, IMessageQueueService messageQueueService, IDocumentFileStorageService fileStorageService, ILogger<DocumentService> logger) : IDocumentService
+public class DocumentService(IDocumentRepository documentRepository, IMessageQueuePublisher messageQueuePublisher, IDocumentFileStorageService fileStorageService, ILogger<DocumentService> logger) : IDocumentService
 {
     public async Task CreateAsync(Document document, IFile file, CancellationToken ct = default)
     {
@@ -38,7 +39,7 @@ public class DocumentService(IDocumentRepository documentRepository, IMessageQue
 
         // Publish message to RabbitMQ
         var message = new DocumentUploadedMessage(document.Id);
-        messageQueueService.Publish(message); // Publishes the document info for OCR processing
+        await messageQueuePublisher.PublishAsync(message); // Publishes the document info for OCR processing
 
         logger.LogInformation("Document \"{documentId}\" uploaded and message sent to queue.", document.Id);
     }

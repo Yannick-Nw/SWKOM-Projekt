@@ -18,6 +18,7 @@ using Application.Services.Documents;
 using AutoMapper;
 using Application.Interfaces;
 using Domain.Messaging;
+using Application.Interfaces.Files;
 
 namespace WebApi.Endpoints;
 
@@ -163,13 +164,21 @@ public static class DocumentEndpoints
 
         // Get file info
         var title = model.Title ??
-                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(model.File.FileName));
+                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(model.FileName));
         var file = mapper.Map<IFile>(model.File);
 
         // Create document domain entity
-        Document document = Document.New(DateTimeOffset.Now, new DocumentMetadata(title, model.Author));
+        Document document = Document.New(DateTimeOffset.Now, new DocumentMetadata(model.FileName, title, model.Author));
 
         // Run validation
+        var fileValidator = new PdfFileValidator();
+        var fileValidationResult = fileValidator.Validate(file);
+        if (!fileValidationResult.IsValid)
+        {
+            logger.LogWarning("File failed validation: {errors}", string.Join(", ", fileValidationResult.Errors.Select(e => e.ErrorMessage)));
+            return TypedResults.UnprocessableEntity();
+        }
+
         var validator = new DocumentValidator();
         var validationResult = validator.Validate(document);
         if (!validationResult.IsValid)

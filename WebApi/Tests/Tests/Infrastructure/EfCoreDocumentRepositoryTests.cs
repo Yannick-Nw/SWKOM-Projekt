@@ -22,7 +22,7 @@ public class EfCoreDocumentRepositoryTests
         var sut = GetDocumentRepository();
         Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("title", "author")
+            new DocumentMetadata("file.pdf", "title", "author")
         );
 
         // Act
@@ -43,9 +43,9 @@ public class EfCoreDocumentRepositoryTests
         var sut = GetDocumentRepository();
         Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("title", "author")
+            new DocumentMetadata("file.pdf", "title", "author")
         );
-        var newMetadata = new DocumentMetadata("newTitle", "newAuthor");
+        var newMetadata = new DocumentMetadata("newfile.pdf", "newTitle", "newAuthor");
         await sut.CreateAsync(document);
 
         // Act
@@ -66,7 +66,7 @@ public class EfCoreDocumentRepositoryTests
         var sut = GetDocumentRepository();
         Document document = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("title", "author")
+            new DocumentMetadata("file.pdf", "title", "author")
         );
         await sut.CreateAsync(document);
 
@@ -87,11 +87,11 @@ public class EfCoreDocumentRepositoryTests
         var sut = GetDocumentRepository();
         var document1 = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("title1", "author1")
+            new DocumentMetadata("file.pdf", "title1", "author1")
         );
         var document2 = Document.New(
             DateTimeOffset.UtcNow,
-            new DocumentMetadata("title2", "author2")
+            new DocumentMetadata("file.pdf", "title2", "author2")
         );
         await sut.CreateAsync(document1);
         await sut.CreateAsync(document2);
