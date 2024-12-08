@@ -8,10 +8,18 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Tesseract;
+using Elastic.Clients.Elasticsearch;
 
 namespace OcrWorker.Services.Ocr;
+
 internal class TesseractOcrProcessorService : IOcrProcessorService
 {
+    private readonly ElasticSearchClient _elasticSearchClient;
+
+    public TesseractOcrProcessorService(ElasticSearchClient elasticSearchClient)
+    {
+        _elasticSearchClient = elasticSearchClient;
+    }
 
     public Task<string> ProcessAsync(IFile file, CancellationToken ct = default)
     {
@@ -22,12 +30,22 @@ internal class TesseractOcrProcessorService : IOcrProcessorService
         };
     }
 
+    public void Dispose()
+    {
+        // No resources to dispose
+    }
+
     private async Task<string> ProcessPdfAsync(IFile file, CancellationToken ct = default)
     {
         using var images = new MagickImageCollection();
         using (var stream = await file.OpenAsync())
         {
             images.Read(stream);
+            var maxFileSizeInBytes = 50 * 1024 * 1024; // 50MB limit
+            if (stream.Length > maxFileSizeInBytes)
+            {
+                throw new InvalidOperationException($"File size exceeds the limit of {maxFileSizeInBytes} bytes.");
+            }
         }
 
         var ocrText = new StringBuilder();
@@ -45,11 +63,25 @@ internal class TesseractOcrProcessorService : IOcrProcessorService
             ocrText.Append(pageText.GetText());
         }
 
-        return ocrText.ToString();
+        var resultText = ocrText.ToString();
+
+        // Index the OCR result in ElasticSearch
+        await IndexOcrResultAsync(file, resultText);
+
+        return resultText;
     }
 
-    public void Dispose()
+    private async Task IndexOcrResultAsync(IFile file, string ocrText)
     {
-        // No resources to dispose
+        var documentToIndex = new
+        {
+            Id = Guid.NewGuid().ToString(),
+            FileName = "test_filename_change_me",
+            ContentType = file.ContentType,
+            Text = ocrText,
+            ProcessedAt = DateTime.UtcNow
+        };
+
+        await _elasticSearchClient.IndexDocumentAsync("documents", documentToIndex);
     }
 }

@@ -19,6 +19,7 @@ using AutoMapper;
 using Application.Interfaces;
 using Domain.Messaging;
 using Application.Interfaces.Files;
+using OcrWorker.Services;
 
 namespace WebApi.Endpoints;
 
@@ -37,8 +38,7 @@ public static class DocumentEndpoints
         group.MapGet("", GetDocumentsAsync)
             .WithOpenApi(c => new(c)
             {
-                Summary = "Retrieves all documents.",
-                Description = "Retrieves all documents from the database."
+                Summary = "Retrieves all documents.", Description = "Retrieves all documents from the database."
             });
 
         group
@@ -55,11 +55,7 @@ public static class DocumentEndpoints
                         Name = "id",
                         In = ParameterLocation.Path,
                         Required = true,
-                        Schema = new OpenApiSchema
-                        {
-                            Type = "string",
-                            Format = "uuid"
-                        }
+                        Schema = new OpenApiSchema { Type = "string", Format = "uuid" }
                     }
                 }
             });
@@ -84,21 +80,11 @@ public static class DocumentEndpoints
                                 {
                                     ["file"] = new OpenApiSchema
                                     {
-                                        Type = "string",
-                                        Format = "binary"
+                                        Type = "string", Format = "binary"
                                     },
-                                    ["fileName"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["title"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["author"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    }
+                                    ["fileName"] = new OpenApiSchema { Type = "string" },
+                                    ["title"] = new OpenApiSchema { Type = "string" },
+                                    ["author"] = new OpenApiSchema { Type = "string" }
                                 }
                             }
                         }
@@ -118,11 +104,7 @@ public static class DocumentEndpoints
                         Name = "id",
                         In = ParameterLocation.Path,
                         Required = true,
-                        Schema = new OpenApiSchema
-                        {
-                            Type = "string",
-                            Format = "uuid"
-                        }
+                        Schema = new OpenApiSchema { Type = "string", Format = "uuid" }
                     }
                 }
             });
@@ -154,8 +136,12 @@ public static class DocumentEndpoints
         return TypedResults.Ok(document);
     }
 
-    public static async Task<Results<CreatedAtRoute, UnprocessableEntity>> UploadDocumentAsync([FromForm] UploadDocumentModel model,
-        IDocumentService documentService, IMapper mapper, ILoggerFactory loggerFactory,
+    public static async Task<Results<CreatedAtRoute, UnprocessableEntity>> UploadDocumentAsync(
+        [FromForm] UploadDocumentModel model,
+        IDocumentService documentService,
+        IMapper mapper,
+        ILoggerFactory loggerFactory,
+        ElasticSearchClient elasticSearchClient,
         CancellationToken ct = default)
     {
         // Logging
@@ -175,7 +161,8 @@ public static class DocumentEndpoints
         var fileValidationResult = fileValidator.Validate(file);
         if (!fileValidationResult.IsValid)
         {
-            logger.LogWarning("File failed validation: {errors}", string.Join(", ", fileValidationResult.Errors.Select(e => e.ErrorMessage)));
+            logger.LogWarning("File failed validation: {errors}",
+                string.Join(", ", fileValidationResult.Errors.Select(e => e.ErrorMessage)));
             return TypedResults.UnprocessableEntity();
         }
 
@@ -183,7 +170,8 @@ public static class DocumentEndpoints
         var validationResult = validator.Validate(document);
         if (!validationResult.IsValid)
         {
-            logger.LogWarning("Upload failed validation: {errors}", string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+            logger.LogWarning("Upload failed validation: {errors}",
+                string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
             return TypedResults.UnprocessableEntity();
         }
 
@@ -195,6 +183,25 @@ public static class DocumentEndpoints
         {
             logger.LogError(ex, "Failed to upload document: {model}", model);
             return TypedResults.UnprocessableEntity();
+        }
+
+        // Index document in ElasticSearch
+        try
+        {
+            var documentToIndex = new
+            {
+                Id = document.Id.Value,
+                FileName = model.FileName,
+                Title = title,
+                Author = model.Author,
+                UploadTime = document.UploadTime
+            };
+
+            await elasticSearchClient.IndexDocumentAsync("documents", documentToIndex);
+            logger.LogInformation("Document indexed in ElasticSearch.");
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to index document in ElasticSearch: {model}", model);
         }
 
         return TypedResults.CreatedAtRoute("GetDocumentById", new { Id = document.Id.Value });

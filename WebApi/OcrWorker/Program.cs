@@ -1,5 +1,5 @@
-﻿
-// Retrieve environemnt variables to connect to RabbitMQ queue
+﻿// Retrieve environemnt variables to connect to RabbitMQ queue
+
 using Application.Services.Documents;
 using Domain.Entities.Documents;
 using Domain.Messaging;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OcrWorker.Extensions;
+using OcrWorker.Services;
 using OcrWorker.Services.Ocr;
 using RabbitMQ.Client;
 
@@ -20,6 +21,7 @@ var configuration = new ConfigurationBuilder()
 
 var serviceProvider = new ServiceCollection()
     .AddOcrServices(configuration)
+    .AddSingleton<ElasticSearchClient>() // Add ElasticSearch client
     .BuildServiceProvider();
 
 // Create connection factory
@@ -42,11 +44,32 @@ await foreach (var receivedMessage in queueListener.ListenAsync<DocumentUploaded
         continue;
     }
 
-    // Perform OCR
-    var result = await ocrService.ProcessAsync(documentFile.File);
+    // Perform OCR on the file
+    var ocrResult = await ocrService.ProcessAsync(documentFile.File);
 
-    // Log result and later SAVE
-    logger.LogInformation("OCR result: {result}", result);
+    // Log the OCR result
+    logger.LogInformation("OCR result: {ocrResult}", ocrResult);
 
+    // Index OCR result into ElasticSearch
+    try
+    {
+        var elasticSearchClient = serviceProvider.GetRequiredService<ElasticSearchClient>();
+        await elasticSearchClient.IndexDocumentAsync("documents",
+            new
+            {
+                Id = documentId,
+                FileName = "programdotcs_filename_change_me",
+                ContentType = documentFile.File.ContentType,
+                Text = ocrResult,
+                ProcessedAt = DateTime.UtcNow
+            });
+
+        logger.LogInformation("Document indexed in ElasticSearch.");
+    } catch (Exception ex)
+    {
+        logger.LogError("Failed to index document in ElasticSearch: {ex}", ex.Message);
+    }
+
+    // Acknowledge the message
     await receivedMessage.AckAsync();
 }
