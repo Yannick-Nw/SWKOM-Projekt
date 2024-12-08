@@ -20,6 +20,8 @@ using Application.Interfaces;
 using Domain.Messaging;
 using Application.Interfaces.Files;
 using OcrWorker.Services;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 
 namespace WebApi.Endpoints;
 
@@ -108,6 +110,14 @@ public static class DocumentEndpoints
                     }
                 }
             });
+
+        group
+            .MapGet("search", SearchDocumentsAsync)
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Search documents.", Description = "Search documents by title, author, or content."
+            });
+
 
         return builder;
     }
@@ -220,5 +230,25 @@ public static class DocumentEndpoints
             return TypedResults.NotFound<Guid>(id);
 
         return TypedResults.Ok();
+    }
+
+    public static async Task<Ok<IReadOnlyList<dynamic>>> SearchDocumentsAsync(
+        [FromQuery] string query,
+        ElasticSearchClient elasticSearchClient,
+        ILoggerFactory loggerFactory,
+        CancellationToken ct = default)
+    {
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+        logger.LogInformation("Searching documents with query: {query}", query);
+
+        try
+        {
+            var response = await elasticSearchClient.SearchDocumentsAsync(query, ct);
+            return TypedResults.Ok(response);
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to search documents with query: {query}", query);
+            throw;
+        }
     }
 }
