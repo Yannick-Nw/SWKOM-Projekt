@@ -18,7 +18,7 @@ services:
     environment:
         MINIO_ROOT_USER: ${MINIO__ACCESS_KEY}      # Admin username
         MINIO_ROOT_PASSWORD: ${MINIO__SECRET_KEY}  # Admin password
-      # MINIO_LOG_LEVEL: "debug"
+        MINIO_LOG_LEVEL: "debug"
     entrypoint: sh
     command: -c 'mkdir -p /data/documents && /usr/bin/minio server /data --console-address :9090'
     volumes:
@@ -28,11 +28,11 @@ services:
 
   ocr-worker:
     build:
-        context: ./WebApi/OcrWorker
+      context: ./OcrWorker
         additional_contexts:
-            domain: ./WebApi/Domain
-            application: ./WebApi/Application
-            infrastructure: ./WebApi/Infrastructure
+          domain: ./Domain
+          application: ./Application
+          infrastructure: ./Infrastructure
     env_file:
       - .env
     environment:
