@@ -58,7 +58,7 @@ await foreach (var receivedMessage in queueListener.ListenAsync<DocumentUploaded
             new
             {
                 Id = documentId,
-                FileName = "programdotcs_filename_change_me",
+                FileName = "programdotcs_filename_change_me", //TODO: Change this to the actual file name
                 ContentType = documentFile.File.ContentType,
                 Text = ocrResult,
                 ProcessedAt = DateTime.UtcNow

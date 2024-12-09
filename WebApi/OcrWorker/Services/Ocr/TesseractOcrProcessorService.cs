@@ -76,7 +76,7 @@ internal class TesseractOcrProcessorService : IOcrProcessorService
         var documentToIndex = new
         {
             Id = Guid.NewGuid().ToString(),
-            FileName = "test_filename_change_me",
+            FileName = "test_filename_change_me", //TODO: Change this to the actual file name
             ContentType = file.ContentType,
             Text = ocrText,
             ProcessedAt = DateTime.UtcNow
