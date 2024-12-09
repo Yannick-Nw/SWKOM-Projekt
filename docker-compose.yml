@@ -29,10 +29,10 @@ services:
   ocr-worker:
     build:
       context: ./OcrWorker
-        additional_contexts:
-          domain: ./Domain
-          application: ./Application
-          infrastructure: ./Infrastructure
+      additional_contexts:
+        domain: ./Domain
+        application: ./Application
+        infrastructure: ./Infrastructure
     env_file:
       - .env
     environment:
