@@ -1,5 +1,5 @@
 ﻿using Domain.Messaging;
-using Infrastructure.Messaging;
+using Infrastructure.Messaging.RabbitMq;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RabbitMQ.Client;
@@ -11,10 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-
 namespace Tests.Tests.Infrastructure;
-
-
 public class RabbitMqMessageQueueServiceTests
 {
     [Fact]

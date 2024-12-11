@@ -25,6 +25,10 @@ public static class ServiceExtensions
         var minIoAccessKey = configuration.GetValue<string>("MINIO:ACCESS_KEY", string.Empty)!;
         var minIoSecretKey = configuration.GetValue<string>("MINIO:SECRET_KEY", string.Empty)!;
 
+        // Elasticsearch settings
+        var elasticSearchHost = configuration.GetValue<string>("ELASTICSEARCH:HOST", "localhost")!;
+        int elasticSearchPort = configuration.GetValue<int>("ELASTICSEARCH:PORT", 9200);
+
         // Validate are all set
         if (string.IsNullOrEmpty(rabbitMqHost) || string.IsNullOrEmpty(rabbitMqUsername) || string.IsNullOrEmpty(rabbitMqPassword))
             throw new InvalidOperationException("RabbitMQ connection details are not set");
@@ -32,11 +36,16 @@ public static class ServiceExtensions
         if (string.IsNullOrEmpty(minIoHost) || string.IsNullOrEmpty(minIoAccessKey) || string.IsNullOrEmpty(minIoSecretKey))
             throw new InvalidOperationException("MinIO connection details are not set");
 
+        if (string.IsNullOrEmpty(elasticSearchHost))
+            throw new InvalidOperationException("ElasticSearch connection details are not set");
+
         services
             .AddLogging()
-            .AddMessagingRabbitMq(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
-            .AddFileStorageMinIO(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey)
-            .AddScoped<IOcrProcessorService, TesseractOcrProcessorService>();
+            .AddRabbitMqMessaging(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
+            .AddMinIOFileStorage(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey)
+            .AddServiceElasticSearch(elasticSearchHost, elasticSearchPort)
+            //.AddScoped<IOcrProcessorService, TesseractOcrProcessorService>();
+            .AddScoped<IOcrProcessorService, FakeOcrProcessorService>();
 
         return services;
     }

@@ -12,7 +12,7 @@ using Amazon.Runtime.Internal.Util;
 using Microsoft.Extensions.Logging;
 using Application.Interfaces.Files;
 
-namespace Infrastructure.FileStorage;
+namespace Infrastructure.FileStorage.MinIO;
 
 public record MinIOFile(GetObjectResponse Response) : IFile
 {

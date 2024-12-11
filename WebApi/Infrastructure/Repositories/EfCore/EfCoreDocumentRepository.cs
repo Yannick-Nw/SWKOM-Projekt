@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Domain.Entities.Documents;
-using Domain.Repositories;
+using Domain.Repositories.Documents;
 using Infrastructure.Repositories.EfCore.Dbos;
 using Microsoft.EntityFrameworkCore;
 using System;

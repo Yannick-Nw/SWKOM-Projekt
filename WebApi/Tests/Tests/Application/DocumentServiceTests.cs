@@ -3,7 +3,7 @@ using Application.Interfaces.Files;
 using Application.Services.Documents;
 using Domain.Entities.Documents;
 using Domain.Messaging;
-using Domain.Repositories;
+using Domain.Repositories.Documents;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System;
@@ -250,8 +250,8 @@ public class DocumentServiceTests
 
         var documents = new List<Document>
         {
-            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title1", "author1")),
-            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title2", "author2"))
+            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file1.pdf", "title1", "author1")),
+            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file2.pdf", "title2", "author2"))
         };
 
         documentRepositoryMock

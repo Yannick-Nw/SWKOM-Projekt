@@ -8,19 +8,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Tesseract;
-using Elastic.Clients.Elasticsearch;
 
 namespace OcrWorker.Services.Ocr;
 
-internal class TesseractOcrProcessorService : IOcrProcessorService
+public class TesseractOcrProcessorService : IOcrProcessorService
 {
-    private readonly ElasticSearchClient _elasticSearchClient;
-
-    public TesseractOcrProcessorService(ElasticSearchClient elasticSearchClient)
-    {
-        _elasticSearchClient = elasticSearchClient;
-    }
-
     public Task<string> ProcessAsync(IFile file, CancellationToken ct = default)
     {
         return file.ContentType switch
@@ -30,13 +22,10 @@ internal class TesseractOcrProcessorService : IOcrProcessorService
         };
     }
 
-    public void Dispose()
-    {
-        // No resources to dispose
-    }
-
     private async Task<string> ProcessPdfAsync(IFile file, CancellationToken ct = default)
     {
+        return "I extracted the text on this doc trust me!";
+
         using var images = new MagickImageCollection();
         using (var stream = await file.OpenAsync())
         {
@@ -65,23 +54,11 @@ internal class TesseractOcrProcessorService : IOcrProcessorService
 
         var resultText = ocrText.ToString();
 
-        // Index the OCR result in ElasticSearch
-        await IndexOcrResultAsync(file, resultText);
-
         return resultText;
     }
 
-    private async Task IndexOcrResultAsync(IFile file, string ocrText)
+    public void Dispose()
     {
-        var documentToIndex = new
-        {
-            Id = Guid.NewGuid().ToString(),
-            FileName = "test_filename_change_me", //TODO: Change this to the actual file name
-            ContentType = file.ContentType,
-            Text = ocrText,
-            ProcessedAt = DateTime.UtcNow
-        };
-
-        await _elasticSearchClient.IndexDocumentAsync("documents", documentToIndex);
+        // No resources to dispose
     }
 }

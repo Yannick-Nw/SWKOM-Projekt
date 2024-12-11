@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Messaging;
+namespace Infrastructure.Messaging.RabbitMq;
 
 
 public record ReceivedMessage<T>(T Message, IChannel Channel, ulong DeliveryTag) : IReceivedMessage<T> where T : IMessage

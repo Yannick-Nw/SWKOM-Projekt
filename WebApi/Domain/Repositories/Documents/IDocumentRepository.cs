@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Repositories;
+namespace Domain.Repositories.Documents;
 
 public interface IDocumentRepository
 {

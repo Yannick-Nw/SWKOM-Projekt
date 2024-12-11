@@ -22,6 +22,7 @@ using Application.Interfaces.Files;
 using OcrWorker.Services;
 using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
+using Domain.Services.Documents;
 
 namespace WebApi.Endpoints;
 
@@ -151,7 +152,6 @@ public static class DocumentEndpoints
         IDocumentService documentService,
         IMapper mapper,
         ILoggerFactory loggerFactory,
-        ElasticSearchClient elasticSearchClient,
         CancellationToken ct = default)
     {
         // Logging
@@ -195,25 +195,6 @@ public static class DocumentEndpoints
             return TypedResults.UnprocessableEntity();
         }
 
-        // Index document in ElasticSearch
-        try
-        {
-            var documentToIndex = new
-            {
-                Id = document.Id.Value,
-                FileName = model.FileName,
-                Title = title,
-                Author = model.Author,
-                UploadTime = document.UploadTime
-            };
-
-            await elasticSearchClient.IndexDocumentAsync("documents", documentToIndex);
-            logger.LogInformation("Document indexed in ElasticSearch.");
-        } catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to index document in ElasticSearch: {model}", model);
-        }
-
         return TypedResults.CreatedAtRoute("GetDocumentById", new { Id = document.Id.Value });
     }
 
@@ -232,23 +213,17 @@ public static class DocumentEndpoints
         return TypedResults.Ok();
     }
 
-    public static async Task<Ok<IReadOnlyList<dynamic>>> SearchDocumentsAsync(
+    public static async Task<Ok<IReadOnlyList<DocumentId>>> SearchDocumentsAsync(
         [FromQuery] string query,
-        ElasticSearchClient elasticSearchClient,
+        IDocumentIndexService documentIndexService,
         ILoggerFactory loggerFactory,
         CancellationToken ct = default)
     {
         var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+
         logger.LogInformation("Searching documents with query: {query}", query);
 
-        try
-        {
-            var response = await elasticSearchClient.SearchDocumentsAsync(query, ct);
-            return TypedResults.Ok(response);
-        } catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to search documents with query: {query}", query);
-            throw;
-        }
+        var response = await documentIndexService.SearchAsync(query, ct);
+        return TypedResults.Ok(response);
     }
 }

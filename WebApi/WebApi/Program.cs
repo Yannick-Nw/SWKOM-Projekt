@@ -25,9 +25,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddPaperless(builder.Configuration);
 
-// Register ElasticSearchClient
-builder.Services.AddSingleton<ElasticSearchClient>();
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

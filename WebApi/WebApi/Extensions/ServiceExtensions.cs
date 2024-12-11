@@ -9,6 +9,7 @@ using Infrastructure.Extensions;
 using Infrastructure.Repositories.EfCore;
 using Application.Services.Documents;
 using System.Net.Sockets;
+using Application.Extensions;
 
 namespace WebApi.Extensions;
 
@@ -21,7 +22,7 @@ public static class ServiceExtensions
         services
             .AddMappings()
             .AddLogging()
-            .AddScoped<IDocumentService, DocumentService>()
+            .AddApplication()
             .AddInfrastructure(configuration);
 
         return services;
@@ -46,8 +47,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    private static IServiceCollection AddInfrastructure(this IServiceCollection services,
-        IConfiguration configuration)
+    private static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")!;
         // Configure RabbitMQ connection settings
@@ -62,10 +62,25 @@ public static class ServiceExtensions
         var minIoAccessKey = configuration.GetValue<string>("MINIO:ACCESS_KEY", string.Empty)!;
         var minIoSecretKey = configuration.GetValue<string>("MINIO:SECRET_KEY", string.Empty)!;
 
+        // Elasticsearch settings
+        var elasticSearchHost = configuration.GetValue<string>("ELASTICSEARCH:HOST", "localhost")!;
+        int elasticSearchPort = configuration.GetValue<int>("ELASTICSEARCH:PORT", 9200);
+
+        // Validate are all set
+        if (string.IsNullOrEmpty(rabbitMqHost) || string.IsNullOrEmpty(rabbitMqUsername) || string.IsNullOrEmpty(rabbitMqPassword))
+            throw new InvalidOperationException("RabbitMQ connection details are not set");
+
+        if (string.IsNullOrEmpty(minIoHost) || string.IsNullOrEmpty(minIoAccessKey) || string.IsNullOrEmpty(minIoSecretKey))
+            throw new InvalidOperationException("MinIO connection details are not set");
+
+        if (string.IsNullOrEmpty(elasticSearchHost))
+            throw new InvalidOperationException("ElasticSearch connection details are not set");
+
         services
-            .AddRepositoryEfCore(connectionString)
-            .AddMessagingRabbitMq(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
-            .AddFileStorageMinIO(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey);
+            .AddEfCoreRepository(connectionString)
+            .AddRabbitMqMessaging(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
+            .AddMinIOFileStorage(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey)
+            .AddServiceElasticSearch(elasticSearchHost, elasticSearchPort);
 
         return services;
     }

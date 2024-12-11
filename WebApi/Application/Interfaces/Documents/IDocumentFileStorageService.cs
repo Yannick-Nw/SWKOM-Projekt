@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Files;
 using Domain.Entities.Documents;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 namespace Application.Services.Documents;
 
 
+public record DocumentFile(DocumentId Id, IFile File);
 
 /// <summary>
 /// Implemented by Infrastructure layer to provide file storage for documents

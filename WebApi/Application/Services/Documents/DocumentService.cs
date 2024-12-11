@@ -2,7 +2,7 @@
 using Application.Interfaces.Files;
 using Domain.Entities.Documents;
 using Domain.Messaging;
-using Domain.Repositories;
+using Domain.Repositories.Documents;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

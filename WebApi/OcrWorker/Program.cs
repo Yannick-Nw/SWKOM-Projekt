@@ -3,13 +3,13 @@
 using Application.Services.Documents;
 using Domain.Entities.Documents;
 using Domain.Messaging;
+using Domain.Services.Documents;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OcrWorker.Extensions;
-using OcrWorker.Services;
 using OcrWorker.Services.Ocr;
-using RabbitMQ.Client;
+using System.Diagnostics;
 
 // Basic console logger
 var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
@@ -21,13 +21,13 @@ var configuration = new ConfigurationBuilder()
 
 var serviceProvider = new ServiceCollection()
     .AddOcrServices(configuration)
-    .AddSingleton<ElasticSearchClient>() // Add ElasticSearch client
     .BuildServiceProvider();
 
 // Create connection factory
 using var queueListener = serviceProvider.GetRequiredService<IMessageQueueListener>();
 using var documentFileStorageService = serviceProvider.GetRequiredService<IDocumentFileStorageService>();
 using var ocrService = serviceProvider.GetRequiredService<IOcrProcessorService>();
+using var documentIndexService = serviceProvider.GetRequiredService<IDocumentIndexService>();
 
 // Listen to queue
 logger.LogInformation("Listening to queue");
@@ -36,39 +36,45 @@ await foreach (var receivedMessage in queueListener.ListenAsync<DocumentUploaded
     var documentId = receivedMessage.Message.DocumentId;
 
     // Retrieve document file
-    var documentFile = await documentFileStorageService.GetAsync(documentId);
-    if (documentFile is null)
+    DocumentFile? documentFile;
+    try
     {
-        logger.LogError("Document file not found");
+        documentFile = await documentFileStorageService.GetAsync(documentId);
+        ArgumentNullException.ThrowIfNull(documentFile);
+    } catch (Exception ex) {
+        logger.LogError(ex, "Retrieve document file failed");
         await receivedMessage.NackAsync(requeue: false);
         continue;
     }
 
-    // Perform OCR on the file
-    var ocrResult = await ocrService.ProcessAsync(documentFile.File);
+    // OCR file
+    string? ocrResult;
+    try
+    {
+        ocrResult = await ocrService.ProcessAsync(documentFile.File);
+    } catch (Exception ex)
+    {
+        logger.LogError(ex, "OCR failed");
+        await receivedMessage.NackAsync(requeue: false);
+        continue;
+    }
 
     // Log the OCR result
-    logger.LogInformation("OCR result: {ocrResult}", ocrResult);
+    logger.LogInformation("OCR result: \"{ocrResult}\"", ocrResult);
 
     // Index OCR result into ElasticSearch
     try
     {
-        var elasticSearchClient = serviceProvider.GetRequiredService<ElasticSearchClient>();
-        await elasticSearchClient.IndexDocumentAsync("documents",
-            new
-            {
-                Id = documentId,
-                FileName = "programdotcs_filename_change_me", //TODO: Change this to the actual file name
-                ContentType = documentFile.File.ContentType,
-                Text = ocrResult,
-                ProcessedAt = DateTime.UtcNow
-            });
-
-        logger.LogInformation("Document indexed in ElasticSearch.");
+        var success = await documentIndexService.StoreAsync(documentId, ocrResult);
+        if (!success) throw new ApplicationException("Unsuccessful index storage");
     } catch (Exception ex)
     {
-        logger.LogError("Failed to index document in ElasticSearch: {ex}", ex.Message);
+        logger.LogError(ex, "Document indexing failed");
+        await receivedMessage.NackAsync(requeue: false);
+        continue;
     }
+
+    logger.LogInformation("Finished processing \"{documentId}\"!", documentId);
 
     // Acknowledge the message
     await receivedMessage.AckAsync();

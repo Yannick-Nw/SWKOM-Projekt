@@ -1,10 +1,13 @@
 ﻿using Amazon.S3;
 using Application.Services.Documents;
 using Domain.Messaging;
-using Domain.Repositories;
-using Infrastructure.FileStorage;
-using Infrastructure.Messaging;
+using Domain.Repositories.Documents;
+using Domain.Services.Documents;
+using Elastic.Clients.Elasticsearch;
+using Infrastructure.FileStorage.MinIO;
+using Infrastructure.Messaging.RabbitMq;
 using Infrastructure.Repositories.EfCore;
+using Infrastructure.Services.Elastic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +24,7 @@ namespace Infrastructure.Extensions;
 [ExcludeFromCodeCoverage]
 public static class ServiceExtensions
 {
-    public static IServiceCollection AddRepositoryEfCore(this IServiceCollection services, string connectionString)
+    public static IServiceCollection AddEfCoreRepository(this IServiceCollection services, string connectionString)
     {
         services
             .AddDbContext<PaperlessDbContext>(options => options.UseNpgsql(connectionString))
@@ -30,7 +33,7 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddFileStorageMinIO(this IServiceCollection services, string host, int port, string accessKey, string secretKey)
+    public static IServiceCollection AddMinIOFileStorage(this IServiceCollection services, string host, int port, string accessKey, string secretKey)
     {
         var s3Config = new AmazonS3Config
         {
@@ -45,20 +48,30 @@ public static class ServiceExtensions
         return services;
     }
 
-    public static IServiceCollection AddMessagingRabbitMq(this IServiceCollection services, string host, int port, string username, string password)
+    public static IServiceCollection AddRabbitMqMessaging(this IServiceCollection services, string host, int port, string username, string password)
     {
-        services.AddSingleton<IConnectionFactory>(sp =>
-            new ConnectionFactory
+        var connectionFactory = new ConnectionFactory
             {
                 HostName = host,
                 Port = port,
                 UserName = username,
                 Password = password
-            }
-        );
+            };
+        services
+            .AddSingleton<IConnectionFactory>(connectionFactory)
+            .AddSingleton<IMessageQueueListener, RabbitMqMessageQueueService>()
+            .AddSingleton<IMessageQueuePublisher, RabbitMqMessageQueueService>();
 
-        services.AddSingleton<IMessageQueueListener, RabbitMqMessageQueueService>();
-        services.AddSingleton<IMessageQueuePublisher, RabbitMqMessageQueueService>();
+        return services;
+    }
+
+    public static IServiceCollection AddServiceElasticSearch(this IServiceCollection services, string host, int port)
+    {
+        var settings = new ElasticsearchClientSettings(new Uri($"http://{host}:{port}"));
+
+        services
+            .AddSingleton<IElasticsearchClientSettings>(settings)
+            .AddScoped<IDocumentIndexService, ElasticSearchDocumentIndexedService>();
 
         return services;
     }

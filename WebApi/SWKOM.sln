@@ -39,9 +39,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "html", "html", "{AF1E3427-0
 		..\WebApp\html\index.html = ..\WebApp\html\index.html
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Worker", "Worker", "{25E3B622-563D-4D6F-B210-D891A20361CF}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OcrWorker", "OcrWorker", "{25E3B622-563D-4D6F-B210-D891A20361CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OcrWorker", "OcrWorker\OcrWorker.csproj", "{C1B6FA64-65B9-4FBF-8AC7-5916B75EAD52}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OcrWorker", "OcrWorker\OcrWorker.csproj", "{C1B6FA64-65B9-4FBF-8AC7-5916B75EAD52}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

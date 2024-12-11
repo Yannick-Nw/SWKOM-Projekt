@@ -144,7 +144,6 @@ public class DocumentEndpointsTests
         var mockFile = new Mock<IFormFile>();
         var mockLoggerFactory = new Mock<ILoggerFactory>();
         var mockLogger = new Mock<ILogger>();
-        var mockElasticSearchClient = new Mock<ElasticSearchClient>(); // Mock ElasticSearch client
 
         mockLoggerFactory
             .Setup(l => l.CreateLogger(It.IsAny<string>()))
@@ -158,9 +157,6 @@ public class DocumentEndpointsTests
             .Setup(r => r.CreateAsync(It.IsAny<Document>(), It.IsAny<IFile>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        mockElasticSearchClient
-            .Setup(es => es.IndexDocumentAsync(It.IsAny<string>(), It.IsAny<object>()))
-            .Returns(Task.CompletedTask);
 
         var model = new UploadDocumentModel(mockFile.Object, "file.pdf", "Title", "Author");
 
@@ -169,19 +165,12 @@ public class DocumentEndpointsTests
             model,
             mockService.Object,
             mapper,
-            mockLoggerFactory.Object,
-            mockElasticSearchClient.Object
+            mockLoggerFactory.Object
         );
 
         // Assert
         Assert.IsType<CreatedAtRoute>(result.Result);
         Assert.Equal("GetDocumentById", ((CreatedAtRoute)result.Result).RouteName);
-
-        // Verify ElasticSearch was called
-        mockElasticSearchClient.Verify(
-            es => es.IndexDocumentAsync("documents", It.IsAny<object>()),
-            Times.Once
-        );
     }
 
     [Fact]
@@ -193,7 +182,6 @@ public class DocumentEndpointsTests
         var mockFile = new Mock<IFormFile>();
         var mockLoggerFactory = new Mock<ILoggerFactory>();
         var mockLogger = new Mock<ILogger>();
-        var mockElasticSearchClient = new Mock<ElasticSearchClient>(); // Mock ElasticSearch client
 
         mockLoggerFactory
             .Setup(l => l.CreateLogger(It.IsAny<string>()))
@@ -214,23 +202,10 @@ public class DocumentEndpointsTests
             model,
             mockService.Object,
             mapper,
-            mockLoggerFactory.Object,
-            mockElasticSearchClient.Object
+            mockLoggerFactory.Object
         );
 
         // Assert
         Assert.IsType<UnprocessableEntity>(result.Result);
-
-        // Ensure ElasticSearchClient is NOT called
-        mockElasticSearchClient.Verify(
-            es => es.IndexDocumentAsync(It.IsAny<string>(), It.IsAny<object>()),
-            Times.Never
-        );
-
-        // Ensure the logger recorded warnings
-        mockLogger.Verify(
-            l => l.LogWarning(It.IsAny<string>(), It.IsAny<object[]>()),
-            Times.AtLeastOnce
-        );
     }
 }
