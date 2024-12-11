@@ -20,7 +20,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.RegisterPaperless(builder.Configuration);
+builder.Services.AddPaperless(builder.Configuration);
 
 var app = builder.Build();
 

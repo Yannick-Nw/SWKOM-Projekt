@@ -15,7 +15,7 @@ namespace WebApi.Extensions;
 [ExcludeFromCodeCoverage]
 public static class ServiceExtensions
 {
-    public static IServiceCollection RegisterPaperless(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddPaperless(this IServiceCollection services, IConfiguration configuration)
     {
         services
             .AddMappings()
