@@ -18,6 +18,10 @@ using Application.Services.Documents;
 using AutoMapper;
 using Application.Interfaces;
 using Domain.Messaging;
+using Application.Interfaces.Files;
+using OcrWorker.Services;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Transport;
 
 namespace WebApi.Endpoints;
 
@@ -36,8 +40,7 @@ public static class DocumentEndpoints
         group.MapGet("", GetDocumentsAsync)
             .WithOpenApi(c => new(c)
             {
-                Summary = "Retrieves all documents.",
-                Description = "Retrieves all documents from the database."
+                Summary = "Retrieves all documents.", Description = "Retrieves all documents from the database."
             });
 
         group
@@ -54,11 +57,7 @@ public static class DocumentEndpoints
                         Name = "id",
                         In = ParameterLocation.Path,
                         Required = true,
-                        Schema = new OpenApiSchema
-                        {
-                            Type = "string",
-                            Format = "uuid"
-                        }
+                        Schema = new OpenApiSchema { Type = "string", Format = "uuid" }
                     }
                 }
             });
@@ -83,21 +82,11 @@ public static class DocumentEndpoints
                                 {
                                     ["file"] = new OpenApiSchema
                                     {
-                                        Type = "string",
-                                        Format = "binary"
+                                        Type = "string", Format = "binary"
                                     },
-                                    ["fileName"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["title"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    },
-                                    ["author"] = new OpenApiSchema
-                                    {
-                                        Type = "string"
-                                    }
+                                    ["fileName"] = new OpenApiSchema { Type = "string" },
+                                    ["title"] = new OpenApiSchema { Type = "string" },
+                                    ["author"] = new OpenApiSchema { Type = "string" }
                                 }
                             }
                         }
@@ -117,14 +106,18 @@ public static class DocumentEndpoints
                         Name = "id",
                         In = ParameterLocation.Path,
                         Required = true,
-                        Schema = new OpenApiSchema
-                        {
-                            Type = "string",
-                            Format = "uuid"
-                        }
+                        Schema = new OpenApiSchema { Type = "string", Format = "uuid" }
                     }
                 }
             });
+
+        group
+            .MapGet("search", SearchDocumentsAsync)
+            .WithOpenApi(c => new(c)
+            {
+                Summary = "Search documents.", Description = "Search documents by title, author, or content."
+            });
+
 
         return builder;
     }
@@ -153,8 +146,12 @@ public static class DocumentEndpoints
         return TypedResults.Ok(document);
     }
 
-    public static async Task<Results<CreatedAtRoute, UnprocessableEntity>> UploadDocumentAsync([FromForm] UploadDocumentModel model,
-        IDocumentService documentService, IMapper mapper, ILoggerFactory loggerFactory,
+    public static async Task<Results<CreatedAtRoute, UnprocessableEntity>> UploadDocumentAsync(
+        [FromForm] UploadDocumentModel model,
+        IDocumentService documentService,
+        IMapper mapper,
+        ILoggerFactory loggerFactory,
+        ElasticSearchClient elasticSearchClient,
         CancellationToken ct = default)
     {
         // Logging
@@ -163,18 +160,28 @@ public static class DocumentEndpoints
 
         // Get file info
         var title = model.Title ??
-                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(model.File.FileName));
+                    CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Path.GetFileNameWithoutExtension(model.FileName));
         var file = mapper.Map<IFile>(model.File);
 
         // Create document domain entity
-        Document document = Document.New(DateTimeOffset.Now, new DocumentMetadata(title, model.Author));
+        Document document = Document.New(DateTimeOffset.Now, new DocumentMetadata(model.FileName, title, model.Author));
 
         // Run validation
+        var fileValidator = new PdfFileValidator();
+        var fileValidationResult = fileValidator.Validate(file);
+        if (!fileValidationResult.IsValid)
+        {
+            logger.LogWarning("File failed validation: {errors}",
+                string.Join(", ", fileValidationResult.Errors.Select(e => e.ErrorMessage)));
+            return TypedResults.UnprocessableEntity();
+        }
+
         var validator = new DocumentValidator();
         var validationResult = validator.Validate(document);
         if (!validationResult.IsValid)
         {
-            logger.LogWarning("Upload failed validation: {errors}", string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
+            logger.LogWarning("Upload failed validation: {errors}",
+                string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage)));
             return TypedResults.UnprocessableEntity();
         }
 
@@ -186,6 +193,25 @@ public static class DocumentEndpoints
         {
             logger.LogError(ex, "Failed to upload document: {model}", model);
             return TypedResults.UnprocessableEntity();
+        }
+
+        // Index document in ElasticSearch
+        try
+        {
+            var documentToIndex = new
+            {
+                Id = document.Id.Value,
+                FileName = model.FileName,
+                Title = title,
+                Author = model.Author,
+                UploadTime = document.UploadTime
+            };
+
+            await elasticSearchClient.IndexDocumentAsync("documents", documentToIndex);
+            logger.LogInformation("Document indexed in ElasticSearch.");
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to index document in ElasticSearch: {model}", model);
         }
 
         return TypedResults.CreatedAtRoute("GetDocumentById", new { Id = document.Id.Value });
@@ -204,5 +230,25 @@ public static class DocumentEndpoints
             return TypedResults.NotFound<Guid>(id);
 
         return TypedResults.Ok();
+    }
+
+    public static async Task<Ok<IReadOnlyList<dynamic>>> SearchDocumentsAsync(
+        [FromQuery] string query,
+        ElasticSearchClient elasticSearchClient,
+        ILoggerFactory loggerFactory,
+        CancellationToken ct = default)
+    {
+        var logger = loggerFactory.CreateLogger(nameof(DocumentEndpoints));
+        logger.LogInformation("Searching documents with query: {query}", query);
+
+        try
+        {
+            var response = await elasticSearchClient.SearchDocumentsAsync(query, ct);
+            return TypedResults.Ok(response);
+        } catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to search documents with query: {query}", query);
+            throw;
+        }
     }
 }

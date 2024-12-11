@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Files;
 using AutoMapper;
 using System.Diagnostics.CodeAnalysis;
 using WebApi.Models;

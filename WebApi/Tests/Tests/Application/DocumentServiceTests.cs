@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Files;
 using Application.Services.Documents;
 using Domain.Entities.Documents;
 using Domain.Messaging;
@@ -19,7 +20,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -40,7 +41,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -50,7 +51,7 @@ public class DocumentServiceTests
             fileStorageServiceMock.Object,
             loggerMock.Object);
 
-        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title", "author"));
+        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title", "author"));
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() => sut.CreateAsync(document, null!));
@@ -61,7 +62,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -71,7 +72,7 @@ public class DocumentServiceTests
             fileStorageServiceMock.Object,
             loggerMock.Object);
 
-        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title", "author"));
+        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title", "author"));
         var fileMock = new Mock<IFile>();
 
         var ct = CancellationToken.None;
@@ -91,7 +92,7 @@ public class DocumentServiceTests
 
         messageQueueServiceMock
             .InSequence(sequence)
-            .Setup(m => m.Publish(It.Is<DocumentUploadedMessage>(msg => msg.DocumentId == document.Id)));
+            .Setup(m => m.PublishAsync(It.Is<DocumentUploadedMessage>(msg => msg.DocumentId == document.Id)));
 
         // Act
         await sut.CreateAsync(document, fileMock.Object, ct);
@@ -99,12 +100,12 @@ public class DocumentServiceTests
         // Assert
         fileStorageServiceMock.Verify(s => s.UploadAsync(It.IsAny<DocumentFile>(), ct), Times.Once);
         documentRepositoryMock.Verify(r => r.CreateAsync(document, ct), Times.Once);
-        messageQueueServiceMock.Verify(m => m.Publish(It.IsAny<DocumentUploadedMessage>()), Times.Once);
+        messageQueueServiceMock.Verify(m => m.PublishAsync(It.IsAny<DocumentUploadedMessage>()), Times.Once);
 
         // Verify the order of calls
         fileStorageServiceMock.Verify(s => s.UploadAsync(It.IsAny<DocumentFile>(), ct), Times.Once);
         documentRepositoryMock.Verify(r => r.CreateAsync(document, ct), Times.Once);
-        messageQueueServiceMock.Verify(m => m.Publish(It.IsAny<DocumentUploadedMessage>()), Times.Once);
+        messageQueueServiceMock.Verify(m => m.PublishAsync(It.IsAny<DocumentUploadedMessage>()), Times.Once);
     }
 
     [Fact]
@@ -112,7 +113,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -122,7 +123,7 @@ public class DocumentServiceTests
             fileStorageServiceMock.Object,
             loggerMock.Object);
 
-        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title", "author"));
+        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title", "author"));
         var fileMock = new Mock<IFile>();
 
         var ct = CancellationToken.None;
@@ -142,7 +143,7 @@ public class DocumentServiceTests
         documentRepositoryMock.Verify(r => r.CreateAsync(document, ct), Times.Never);
 
         // Verify that Publish was not called
-        messageQueueServiceMock.Verify(m => m.Publish(It.IsAny<DocumentUploadedMessage>()), Times.Never);
+        messageQueueServiceMock.Verify(m => m.PublishAsync(It.IsAny<DocumentUploadedMessage>()), Times.Never);
     }
 
     [Fact]
@@ -150,7 +151,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -160,7 +161,7 @@ public class DocumentServiceTests
             fileStorageServiceMock.Object,
             loggerMock.Object);
 
-        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title", "author"));
+        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title", "author"));
         var fileMock = new Mock<IFile>();
 
         var ct = CancellationToken.None;
@@ -181,7 +182,7 @@ public class DocumentServiceTests
         documentRepositoryMock.Verify(r => r.DeleteAsync(document.Id, CancellationToken.None), Times.Once);
 
         // Verify that Publish was not called
-        messageQueueServiceMock.Verify(m => m.Publish(It.IsAny<DocumentUploadedMessage>()), Times.Never);
+        messageQueueServiceMock.Verify(m => m.PublishAsync(It.IsAny<DocumentUploadedMessage>()), Times.Never);
     }
 
     [Fact]
@@ -189,7 +190,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -208,7 +209,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -237,7 +238,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -249,8 +250,8 @@ public class DocumentServiceTests
 
         var documents = new List<Document>
         {
-            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title1", "author1")),
-            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title2", "author2"))
+            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title1", "author1")),
+            Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title2", "author2"))
         };
 
         documentRepositoryMock
@@ -270,7 +271,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 
@@ -280,7 +281,7 @@ public class DocumentServiceTests
             fileStorageServiceMock.Object,
             loggerMock.Object);
 
-        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("title", "author"));
+        var document = Document.New(DateTimeOffset.UtcNow, new DocumentMetadata("file.pdf", "title", "author"));
 
         documentRepositoryMock
             .Setup(r => r.GetAsync(document.Id, CancellationToken.None))
@@ -299,7 +300,7 @@ public class DocumentServiceTests
     {
         // Arrange
         var documentRepositoryMock = new Mock<IDocumentRepository>();
-        var messageQueueServiceMock = new Mock<IMessageQueueService>();
+        var messageQueueServiceMock = new Mock<IMessageQueuePublisher>();
         var fileStorageServiceMock = new Mock<IDocumentFileStorageService>();
         var loggerMock = new Mock<ILogger<DocumentService>>();
 

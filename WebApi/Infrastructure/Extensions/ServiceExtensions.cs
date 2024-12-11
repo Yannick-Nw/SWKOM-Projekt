@@ -57,7 +57,8 @@ public static class ServiceExtensions
             }
         );
 
-        services.AddSingleton<IMessageQueueService, RabbitMqMessageQueueService>();
+        services.AddSingleton<IMessageQueueListener, RabbitMqMessageQueueService>();
+        services.AddSingleton<IMessageQueuePublisher, RabbitMqMessageQueueService>();
 
         return services;
     }

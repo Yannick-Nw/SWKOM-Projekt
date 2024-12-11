@@ -10,9 +10,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Amazon.Runtime.Internal.Util;
 using Microsoft.Extensions.Logging;
+using Application.Interfaces.Files;
 
 namespace Infrastructure.FileStorage;
 
+public record MinIOFile(GetObjectResponse Response) : IFile
+{
+    public string ContentType => Response.Headers.ContentType;
+
+    public Task<Stream> OpenAsync() => Task.FromResult(Response.ResponseStream);
+
+    public void Dispose() => Response.Dispose();
+}
 public class MinIODocumentFileStorageService(AmazonS3Client s3Client, ILogger<MinIODocumentFileStorageService> logger) : IDocumentFileStorageService
 {
     public const string BUCKET_NAME = "documents";
@@ -27,7 +36,6 @@ public class MinIODocumentFileStorageService(AmazonS3Client s3Client, ILogger<Mi
             Key = file.Id.ToString(),
             InputStream = fileStream,
             ContentType = file.File.ContentType,
-            TagSet = new List<Tag> { new Tag { Key = "name", Value = file.File.Name } }
         };
 
         await s3Client.PutObjectAsync(putRequest, ct);
@@ -39,23 +47,16 @@ public class MinIODocumentFileStorageService(AmazonS3Client s3Client, ILogger<Mi
     {
         try
         {
-            return null;
-            //var getRequest = new GetObjectRequest
-            //{
-            //    BucketName = BUCKET_NAME,
-            //    Key = id.ToString()
-            //};
+            var getRequest = new GetObjectRequest
+            {
+                BucketName = BUCKET_NAME,
+                Key = id.ToString()
+            };
 
-            //using var response = await s3Client.GetObjectAsync(getRequest, ct);
+            var response = await s3Client.GetObjectAsync(getRequest, ct);
+            var file = new MinIOFile(response);
 
-            //using var stream = new MemoryStream();
-            //await response.ResponseStream.CopyToAsync(stream, ct);
-
-            //return new DocumentFile
-            //{
-            //    Id = id,
-            //    File = new File(id.ToString(), response.Headers.ContentType, stream)
-            //};
+            return new DocumentFile(id, file);
         } catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
             logger.LogWarning("Document \"{documentId}\" not found in MinIO.", id);

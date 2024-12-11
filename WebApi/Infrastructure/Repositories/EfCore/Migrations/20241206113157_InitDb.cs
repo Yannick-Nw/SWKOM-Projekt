@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Infrastructure.Migrations
+namespace Infrastructure.Repositories.EfCore.Migrations
 {
     /// <inheritdoc />
     public partial class InitDb : Migration

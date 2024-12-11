@@ -80,8 +80,10 @@
                 return;
             }
 
+
             const formData = new FormData();
             formData.append('File', fileInput.files[0]);
+            formData.append('FileName', fileInput.files[0].name);
             if (title) formData.append('Title', title);
             if (author) formData.append('Author', author);
 

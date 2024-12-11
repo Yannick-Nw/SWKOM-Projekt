@@ -10,6 +10,6 @@ public interface IReceivedMessage<T> where T : IMessage
 {
     T Message { get; }
 
-    void Ack();
-    void Nack(bool requeue);
+    Task AckAsync();
+    Task NackAsync(bool requeue);
 }

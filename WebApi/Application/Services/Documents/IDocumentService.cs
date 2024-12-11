@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Interfaces.Files;
 using Domain.Entities.Documents;
 using System;
 using System.Collections.Generic;

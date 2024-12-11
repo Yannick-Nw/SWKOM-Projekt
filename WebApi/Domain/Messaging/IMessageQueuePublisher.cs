@@ -8,5 +8,5 @@ namespace Domain.Messaging;
 
 public interface IMessageQueuePublisher
 {
-    void Publish<T>(T message) where T : IMessage;
+    Task PublishAsync<T>(T message) where T : IMessage;
 }
