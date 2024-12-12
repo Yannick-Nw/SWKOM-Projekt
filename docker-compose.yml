@@ -20,10 +20,9 @@ services:
     networks:
       - backend
   
-   # test elasticsearch with http://localhost:5601/app/dev_tools#/console
+  # test elasticsearch with http://localhost:5601/app/dev_tools#/console
   kibana:
     image: docker.elastic.co/kibana/kibana:8.2.3
-    # container_name: paperlessservices-kibanba-1
     ports:
       - "5601:5601"
     environment:
@@ -58,10 +57,10 @@ services:
     env_file:
       - .env
     depends_on:
-      webapi:
-        condition: service_started
       rabbitmq:
         condition: service_healthy
+      webapi:
+        condition: service_started
     networks:
       - backend
 
@@ -119,6 +118,8 @@ services:
       postgres:
         condition: service_started
       minio:
+        condition: service_started
+      elasticsearch:
         condition: service_started
     networks:
       - frontend

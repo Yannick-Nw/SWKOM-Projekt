@@ -24,8 +24,6 @@ public class TesseractOcrProcessorService : IOcrProcessorService
 
     private async Task<string> ProcessPdfAsync(IFile file, CancellationToken ct = default)
     {
-        return "I extracted the text on this doc trust me!";
-
         using var images = new MagickImageCollection();
         using (var stream = await file.OpenAsync())
         {

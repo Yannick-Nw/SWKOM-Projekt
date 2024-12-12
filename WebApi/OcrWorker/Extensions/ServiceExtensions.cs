@@ -44,8 +44,8 @@ public static class ServiceExtensions
             .AddRabbitMqMessaging(rabbitMqHost, rabbitMqPort, rabbitMqUsername, rabbitMqPassword)
             .AddMinIOFileStorage(minIoHost, minIoPort, minIoAccessKey, minIoSecretKey)
             .AddServiceElasticSearch(elasticSearchHost, elasticSearchPort)
-            //.AddScoped<IOcrProcessorService, TesseractOcrProcessorService>();
-            .AddScoped<IOcrProcessorService, FakeOcrProcessorService>();
+            .AddScoped<IOcrProcessorService, TesseractOcrProcessorService>();
+            //.AddScoped<IOcrProcessorService, FakeOcrProcessorService>();
 
         return services;
     }
