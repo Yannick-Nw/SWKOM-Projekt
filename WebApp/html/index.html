@@ -1,61 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document Upload Frontend</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <title>Document Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 </head>
-
 <body>
-    <section class="section">
-        <div class="container">
-            <h1 class="title">Upload Documents</h1>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Document Management System</h1>
 
-            <div class="box">
-                <h2 class="subtitle">Upload a New Document</h2>
-                <div class="field">
-                    <label class="label">File</label>
-                    <div class="control">
-                        <input class="input" type="file" id="documentFile">
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">Title</label>
-                    <div class="control">
-                        <input class="input" type="text" id="documentTitle" placeholder="Document Title">
-                    </div>
-                </div>
-                <div class="field">
-                    <label class="label">Author</label>
-                    <div class="control">
-                        <input class="input" type="text" id="documentAuthor" placeholder="Author Name">
-                    </div>
-                </div>
-                <button class="button is-primary" onclick="uploadDocument()">Upload Document</button>
-            </div>
-
-            <div class="box">
-                <h2 class="subtitle">Documents List</h2>
-                <div id="documentsList"></div>
-            </div>
+        <div class="tabs is-centered is-boxed">
+            <ul>
+                <li class="is-active" id="upload-tab">
+                    <a>
+                        <span class="icon is-small">
+                            <i class="fas fa-upload"></i>
+                        </span>
+                        <span>Upload</span>
+                    </a>
+                </li>
+                <li id="search-tab">
+                    <a>
+                        <span class="icon is-small">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <span>Search</span>
+                    </a>
+                </li>
+            </ul>
         </div>
-    </section>
 
-    <script>
-        // Replace with your API URL
-        const apiUrl = 'http://localhost:8080/api/document';
+        <!-- Upload Section -->
+        <div class="box" id="upload-section">
+            <h2 class="subtitle">Upload a New Document</h2>
+            <div class="field">
+                <label class="label">File</label>
+                <div class="control">
+                    <input class="input" id="documentFile" type="file">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Title</label>
+                <div class="control">
+                    <input class="input" id="documentTitle" placeholder="Document Title" type="text">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label">Author</label>
+                <div class="control">
+                    <input class="input" id="documentAuthor" placeholder="Author Name" type="text">
+                </div>
+            </div>
+            <button class="button is-primary" onclick="uploadDocument()">Upload Document</button>
+        </div>
 
-        // Function to fetch and display documents
-        async function fetchDocuments() {
-            try {
-                const response = await fetch(apiUrl);
-                const documents = await response.json();
-                const documentsList = document.getElementById('documentsList');
-                documentsList.innerHTML = '';
-                documents.forEach(doc => {
-                    documentsList.innerHTML += `
+        <!-- Search Section -->
+        <div class="box" id="search-section" style="display: none;">
+            <h2 class="subtitle">Search Documents</h2>
+            <div class="field">
+                <label class="label">Search Query</label>
+                <div class="control">
+                    <input class="input" id="searchQuery" placeholder="Enter title, author, or content" type="text">
+                </div>
+            </div>
+            <button class="button is-info" onclick="searchDocuments()">Search</button>
+
+            <div class="mt-4" id="searchResults"></div>
+        </div>
+
+        <!-- Documents List -->
+        <div class="box">
+            <h2 class="subtitle">Documents List</h2>
+            <div id="documentsList"></div>
+        </div>
+    </div>
+</section>
+
+<script>
+    const apiUrl = 'http://localhost:8080/api/document';
+
+    // Switch between tabs
+    document.getElementById('upload-tab').onclick = () => {
+        document.getElementById('upload-section').style.display = 'block';
+        document.getElementById('search-section').style.display = 'none';
+    };
+
+    document.getElementById('search-tab').onclick = () => {
+        document.getElementById('upload-section').style.display = 'none';
+        document.getElementById('search-section').style.display = 'block';
+    };
+
+    // Fetch documents
+    async function fetchDocuments() {
+        try {
+            const response = await fetch(apiUrl);
+            const documents = await response.json();
+            const documentsList = document.getElementById('documentsList');
+            documentsList.innerHTML = '';
+            documents.forEach(doc => {
+                documentsList.innerHTML += `
                         <div class="box">
                             <h3 class="title is-4">${doc.metadata.title || 'Untitled Document'}</h3>
                             <p><strong>Author:</strong> ${doc.metadata.author || 'Unknown'}</p>
@@ -63,69 +109,83 @@
                             <button class="button is-danger" onclick="deleteDocument('${doc.id}')">Delete</button>
                         </div>
                     `;
-                });
-            } catch (error) {
-                console.error('Error fetching documents:', error);
-            }
+            });
+        } catch (error) {
+            console.error('Error fetching documents:', error);
+        }
+    }
+
+    // Upload a document
+    async function uploadDocument() {
+        const fileInput = document.getElementById('documentFile');
+        const title = document.getElementById('documentTitle').value;
+        const author = document.getElementById('documentAuthor').value;
+
+        if (fileInput.files.length === 0) {
+            alert('Please select a file to upload.');
+            return;
         }
 
-        // Function to upload a new document
-        async function uploadDocument() {
-            const fileInput = document.getElementById('documentFile');
-            const title = document.getElementById('documentTitle').value;
-            const author = document.getElementById('documentAuthor').value;
+        const formData = new FormData();
+        formData.append('File', fileInput.files[0]);
+        formData.append('FileName', fileInput.files[0].name);
+        if (title) formData.append('Title', title);
+        if (author) formData.append('Author', author);
 
-            if (fileInput.files.length === 0) {
-                alert('Please select a file to upload.');
-                return;
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                fetchDocuments();
+                fileInput.value = '';
+                document.getElementById('documentTitle').value = '';
+                document.getElementById('documentAuthor').value = '';
+            } else {
+                console.error('Error uploading document');
             }
-
-
-            const formData = new FormData();
-            formData.append('File', fileInput.files[0]);
-            formData.append('FileName', fileInput.files[0].name);
-            if (title) formData.append('Title', title);
-            if (author) formData.append('Author', author);
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    fetchDocuments();
-                    fileInput.value = '';
-                    document.getElementById('documentTitle').value = '';
-                    document.getElementById('documentAuthor').value = '';
-                } else {
-                    console.error('Error uploading document');
-                }
-            } catch (error) {
-                console.error('Error uploading document:', error);
-            }
+        } catch (error) {
+            console.error('Error uploading document:', error);
         }
+    }
 
-        // Function to delete a document
-        async function deleteDocument(id) {
-            try {
-                const response = await fetch(`${apiUrl}/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    fetchDocuments();
-                } else {
-                    console.error('Error deleting document');
-                }
-            } catch (error) {
-                console.error('Error deleting document:', error);
-            }
+    // Search documents
+    async function searchDocuments() {
+        const query = document.getElementById('searchQuery').value;
+        try {
+            const response = await fetch(`${apiUrl}/search?query=${encodeURIComponent(query)}`);
+            const results = await response.json();
+            const searchResults = document.getElementById('searchResults');
+            searchResults.innerHTML = '';
+            results.forEach(docId => {
+                searchResults.innerHTML += `<p>Found Document ID: ${docId.value}</p>`;
+            });
+        } catch (error) {
+            console.error('Error searching documents:', error);
         }
+    }
 
-        // Initial fetch of documents
-        fetchDocuments();
-    </script>
+    // Delete a document
+    async function deleteDocument(id) {
+        try {
+            const response = await fetch(`${apiUrl}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                fetchDocuments();
+            } else {
+                console.error('Error deleting document');
+            }
+        } catch (error) {
+            console.error('Error deleting document:', error);
+        }
+    }
+
+    // Initial fetch
+    fetchDocuments();
+</script>
 </body>
-
 </html>
