@@ -18,25 +18,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Set up .NET 8
+      # Step 2: Set up .NET Core
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0'
 
-      # Step 3: Restore Dependencies
+      # Step 3: Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Step 4: Restore Dependencies
       - name: Restore Dependencies
         run: dotnet restore ./WebApi/WebApi/WebApi.csproj
 
-      # Step 4: Build the Project
+      # Step 5: Build the Project
       - name: Build Project
         run: dotnet build ./WebApi/WebApi/WebApi.csproj --configuration Release
 
-      # Step 5: Run Unit Tests
+      # Step 6: Run Unit Tests
       - name: Run Unit Tests
         run: dotnet test ./WebApi/WebApi/WebApi.csproj --no-build --configuration Release
 
-      # Step 6: Validate Docker Compose Services
+      # Step 7: Validate Docker Compose Services
       - name: Build Docker Services
         run: docker-compose -f docker-compose.yml build
 
@@ -64,7 +70,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Step 2: Deploy Application
+      # Step 2: Install Docker Compose
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Step 3: Deploy Application
       - name: Deploy with Docker Compose
         run: |
           docker-compose -f docker-compose.yml down
