@@ -1,0 +1,52 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # Set up .NET Core
+    - name: Set up .NET Core
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0'
+
+    # Restore Dependencies
+    - name: Restore Dependencies
+      run: dotnet restore
+
+    # Build Project
+    - name: Build Project
+      run: dotnet build --no-restore --configuration Release
+
+    # Run Unit Tests
+    - name: Run Unit Tests
+      run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+  deploy:
+    name: Build and Deploy Locally
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    # Build and Deploy with Docker Compose
+    - name: Build and Deploy
+      run: |
+        docker-compose -f docker-compose.prod.yml up --build -d
