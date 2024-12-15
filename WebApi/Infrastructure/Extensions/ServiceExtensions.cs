@@ -7,7 +7,7 @@ using Elastic.Clients.Elasticsearch;
 using Infrastructure.FileStorage.MinIO;
 using Infrastructure.Messaging.RabbitMq;
 using Infrastructure.Repositories.EfCore;
-using Infrastructure.Services.Elastic;
+using Infrastructure.Services.ElasticSearch;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

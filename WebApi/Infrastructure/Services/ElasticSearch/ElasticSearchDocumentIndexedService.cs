@@ -1,15 +1,9 @@
-﻿using Amazon.Runtime.Internal.Util;
-using Domain.Entities.Documents;
+﻿using Domain.Entities.Documents;
 using Domain.Services.Documents;
 using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Infrastructure.Services.Elastic;
+namespace Infrastructure.Services.ElasticSearch;
 
 file record DocumentIndex(DocumentId Id, string Content);
 
