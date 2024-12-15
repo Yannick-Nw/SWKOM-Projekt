@@ -35,3 +35,75 @@ jobs:
       # Step 5: Run Unit Tests
       - name: Run Unit Tests
         run: dotnet test ./WebApi/WebApi/WebApi.csproj --no-build --configuration Release
+
+name: Semester Project CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build, Test, and Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up .NET 8
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0'
+
+      # Step 3: Restore Dependencies
+      - name: Restore Dependencies
+        run: dotnet restore ./WebApi/WebApi/WebApi.csproj
+
+      # Step 4: Build the Project
+      - name: Build Project
+        run: dotnet build ./WebApi/WebApi/WebApi.csproj --configuration Release
+
+      # Step 5: Run Unit Tests
+      - name: Run Unit Tests
+        run: dotnet test ./WebApi/WebApi/WebApi.csproj --no-build --configuration Release
+
+      # Step 6: Validate Docker Compose Services
+      - name: Build Docker Services
+        run: docker-compose -f docker-compose.yml build
+
+      - name: Start Services for Validation
+        run: docker-compose -f docker-compose.yml up -d
+
+      - name: Wait for Services to Start
+        run: sleep 30
+
+      - name: Validate API Health
+        run: |
+          curl -f http://localhost:8080/api/health || exit 1
+
+      # Stop Docker Services after Validation
+      - name: Stop Services
+        run: docker-compose -f docker-compose.yml down
+
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      # Step 1: Checkout the Code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Deploy Application
+      - name: Deploy with Docker Compose
+        run: |
+          docker-compose -f docker-compose.yml down
+          docker-compose -f docker-compose.yml up -d
