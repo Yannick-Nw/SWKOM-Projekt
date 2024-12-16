@@ -1,4 +1,4 @@
-name: CI/CD
+name: .NET CI
 
 on:
   push:
@@ -9,29 +9,23 @@ on:
       - main
 
 jobs:
-  build-and-test:
-    name: Build and Test Project
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up .NET Core
-      - name: Set up .NET Core
+      - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0'
+          dotnet-version: '8.0.x'
 
-      # Step 3: Restore Dependencies
-      - name: Restore Dependencies
-        run: dotnet restore ./WebApi/WebApi/WebApi.csproj
+      - name: Install dependencies
+        run: dotnet restore
 
-      # Step 4: Build the Project
-      - name: Build Project
-        run: dotnet build ./WebApi/WebApi/WebApi.csproj --configuration Release
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
 
-      # Step 5: Run Unit Tests
-      - name: Run Unit Tests
-        run: dotnet test ./WebApi/WebApi/WebApi.csproj --no-build --configuration Release
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal
