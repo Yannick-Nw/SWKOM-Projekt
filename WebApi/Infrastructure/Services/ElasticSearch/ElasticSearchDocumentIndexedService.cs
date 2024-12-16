@@ -2,6 +2,7 @@
 using Domain.Services.Documents;
 using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Infrastructure.Services.ElasticSearch;
 
@@ -38,11 +39,13 @@ public class ElasticSearchDocumentIndexedService(IElasticsearchClientSettings se
         }
     }
 
+    [ExcludeFromCodeCoverage]
     public Task<bool> DeleteAsync(DocumentId id, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }
 
+    [ExcludeFromCodeCoverage]
     public Task<string?> GetAsync(DocumentId id, CancellationToken ct = default)
     {
         throw new NotImplementedException();

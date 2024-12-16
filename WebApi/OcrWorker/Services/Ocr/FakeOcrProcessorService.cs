@@ -1,11 +1,13 @@
 ﻿using Application.Interfaces.Files;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace OcrWorker.Services.Ocr;
+[ExcludeFromCodeCoverage]
 public class FakeOcrProcessorService : IOcrProcessorService
 {
     public Task<string> ProcessAsync(IFile file, CancellationToken ct = default)

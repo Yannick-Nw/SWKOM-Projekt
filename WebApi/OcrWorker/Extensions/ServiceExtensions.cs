@@ -4,11 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using OcrWorker.Services.Ocr;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace OcrWorker.Extensions;
+
+[ExcludeFromCodeCoverage]
 public static class ServiceExtensions
 {
     public static IServiceCollection AddOcrServices(this IServiceCollection services, IConfiguration configuration)
